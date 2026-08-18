@@ -1,0 +1,2100 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Teacher Observation Score History</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Design tokens ── */
+  :root {
+    --ground:       #f5f9f5;
+    --text:         #1a2118;
+    --accent:       #1b5e20;
+    --accent-soft:  #e8f2e9;
+    --accent-mid:   #c8e6c9;
+    --amber:        #e8a217;
+    --amber-soft:   #fef3cd;
+    --border:       #cddece;
+    --muted:        #56695a;
+    --surface:      #ffffff;
+    --up:           #2e7d32;
+    --up-soft:      #e6f4ea;
+    --steady:       #4a5c4d;
+    --steady-soft:  #edf2ee;
+    --down:         #c62828;
+    --down-soft:    #fdeaea;
+    --sidebar-w:    264px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--ground);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ════════════════════════════════
+     LAYOUT
+  ════════════════════════════════ */
+  .layout {
+    display: flex;
+    height: 100vh;
+  }
+
+  /* ════════════════════════════════
+     SIDEBAR
+  ════════════════════════════════ */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--accent);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .sidebar-head {
+    padding: 22px 18px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+  }
+
+  .sidebar-eyebrow {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+    margin-bottom: 5px;
+  }
+
+  .sidebar-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 19px;
+    color: #fff;
+    line-height: 1.25;
+    margin-bottom: 16px;
+  }
+
+  /* School select */
+  .school-wrap { position: relative; }
+  .school-wrap select {
+    width: 100%;
+    padding: 9px 30px 9px 11px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 7px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: background .15s;
+  }
+  .school-wrap select:focus { background: rgba(255,255,255,.16); }
+  .school-wrap select option { background: #1b5e20; color: #fff; }
+  .school-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 9px; top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,.6);
+    pointer-events: none;
+    font-size: 11px;
+  }
+
+  /* Teacher list */
+  .list-label {
+    padding: 13px 18px 6px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.4);
+  }
+
+  .teacher-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 16px;
+  }
+  .teacher-list::-webkit-scrollbar { width: 3px; }
+  .teacher-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.18);
+    border-radius: 2px;
+  }
+
+  .t-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-bottom: 1px;
+    transition: background .12s;
+  }
+  .t-item:hover { background: rgba(255,255,255,.09); }
+  .t-item.active { background: var(--amber); }
+  .t-item.active .t-name  { color: #1a2118; }
+  .t-item.active .t-score { color: rgba(26,33,24,.65); }
+  .t-item.active .t-arrow { opacity: 1; }
+
+  .t-arrow {
+    font-size: 14px;
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+    opacity: 1;
+    font-weight: 700;
+  }
+  .t-name {
+    flex: 1;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: rgba(255,255,255,.88);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .t-score {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,.55);
+    flex-shrink: 0;
+  }
+
+  /* Sidebar controls */
+  .sidebar-controls {
+    padding: 8px 12px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-controls input[type="text"] {
+    width: 100%;
+    padding: 7px 10px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    outline: none;
+  }
+  .sidebar-controls input[type="text"]::placeholder { color: rgba(255,255,255,.38); }
+  .sidebar-controls input[type="text"]:focus { border-color: rgba(255,255,255,.5); }
+  .sort-filter-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .sort-filter-row select {
+    flex: 1;
+    padding: 5px 8px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-pills { display: flex; gap: 3px; }
+  .fpill {
+    padding: 4px 7px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 5px;
+    color: rgba(255,255,255,.55);
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .fpill.active { background: rgba(255,255,255,.22); color: #fff; border-color: rgba(255,255,255,.35); }
+  .fpill:hover { background: rgba(255,255,255,.15); }
+
+  /* Chart legend */
+  .chart-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 6px;
+    padding-left: 36px;
+  }
+  .chart-legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ════════════════════════════════
+     MAIN AREA
+  ════════════════════════════════ */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  /* Top bar */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-name {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 19px;
+    color: var(--text);
+  }
+  .topbar-meta {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    min-height: 52px;
+  }
+  .kpi-strip > [style*="grid-column"] {
+    border-right: none;
+  }
+  .kpi-cell {
+    padding: 13px 20px;
+    border-right: 1px solid var(--border);
+  }
+  .kpi-cell:last-child { border-right: none; }
+  .kpi-lbl {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .kpi-val {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--text);
+  }
+  .kpi-val.green { color: var(--accent); }
+  .kpi-val.red   { color: var(--down); }
+  .kpi-sub { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+
+  /* Scrollable content */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 28px 36px;
+  }
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Two-column grid */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 20px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 1px;
+  }
+  .card-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* Teacher detail header */
+  .detail-hd {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-name {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 26px;
+    line-height: 1.15;
+    color: var(--text);
+  }
+  .detail-school { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .back-btn {
+    flex-shrink: 0;
+    background: var(--accent-soft);
+    border: none; border-radius: 50%;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--accent);
+    font-size: 17px; transition: background .15s;
+    margin-top: 4px;
+  }
+  .back-btn:hover { background: var(--accent-mid); }
+
+  /* Trend badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 13px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .badge.up     { background: var(--up-soft);     color: var(--up); }
+  .badge.steady { background: var(--steady-soft); color: var(--steady); }
+  .badge.down   { background: var(--down-soft);   color: var(--down); }
+
+  /* Indicator bars (CSS) */
+  .ind-bars { display: flex; flex-direction: column; gap: 11px; }
+  .ind-row-css {
+    display: grid;
+    grid-template-columns: 156px 1fr 44px;
+    align-items: center;
+    gap: 10px;
+  }
+  .ind-lbl {
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ind-track {
+    height: 7px;
+    background: var(--accent-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .ind-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+  }
+  .ind-pct {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  /* Month score tiles */
+  .month-tiles {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .m-tile {
+    background: var(--ground);
+    border-radius: 9px;
+    padding: 11px 6px;
+    text-align: center;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: box-shadow .15s;
+  }
+  .m-tile:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .m-tile.peak { background: var(--up-soft); border-color: var(--up-soft); }
+  .m-tile.selected { background: var(--accent-soft); border-color: var(--accent); }
+  .m-tile.selected .m-val { color: var(--accent); }
+  .m-tile .m-lbl {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .m-tile .m-val {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px;
+    color: var(--text);
+    line-height: 1;
+  }
+  .m-tile.peak .m-val { color: var(--up); }
+  .m-tile .m-subj {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 5px;
+    line-height: 1.3;
+  }
+  .visit-detail {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .visit-detail-hd {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 72px;
+  }
+  .visit-detail-month {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .visit-detail-score {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .visit-detail-subj {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .visit-sub-boxes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .visit-sub-name {
+    font-size: 9px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .visit-detail-inds {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .visit-ind-row {
+    background: var(--surface);
+    border-radius: 7px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+  }
+  .visit-ind-name {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .visit-ind-val {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px;
+    color: var(--text);
+  }
+  .visit-cpd {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .visit-cpd-label {
+    font-size: 9px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .visit-cpd-val {
+    font-size: 13px; font-weight: 600; color: var(--text);
+  }
+  .collapsible-hd {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .collapsible-hd:hover { color: var(--accent); }
+  .toggle-arrow { font-size: 11px; color: var(--muted); transition: transform .2s; }
+  .collapsible-hd.open .toggle-arrow { transform: rotate(180deg); }
+
+  /* Empty state */
+  .empty {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 52px 28px;
+    text-align: center;
+  }
+  .empty-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .empty-sub { font-size: 12.5px; color: var(--muted); }
+
+  /* Indicator KPI row (school overview) */
+  .ind-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .ind-kpi-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .ind-kpi-lbl {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .ind-kpi-val {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .ind-kpi-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* Footer note */
+  .foot {
+    font-size: 10.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  /* ════════════════════════════════
+     LOGIN OVERLAY
+  ════════════════════════════════ */
+  #loginOverlay {
+    position: fixed; inset: 0;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+  }
+  #loginCard {
+    background: #fff;
+    border-radius: 14px;
+    padding: 36px 32px 32px;
+    width: 320px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.3);
+  }
+  #loginOrg {
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+  }
+  #loginTitle {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px; color: var(--text); margin-bottom: 24px;
+  }
+  #loginErr {
+    background: #fdeaea; color: var(--down);
+    font-size: 12px; padding: 8px 12px;
+    border-radius: 7px; margin-bottom: 14px;
+    border: 1px solid #f5c6c6;
+  }
+  #loginRolePills {
+    display: flex; gap: 8px; margin-bottom: 22px;
+  }
+  .role-pill {
+    flex: 1; padding: 7px 0; border-radius: 20px;
+    border: 1.5px solid var(--border); background: transparent;
+    font-family: 'Inter', sans-serif; font-size: 13px;
+    color: var(--text-muted); cursor: pointer; transition: .15s;
+  }
+  .role-pill.active {
+    background: var(--accent); border-color: var(--accent);
+    color: #fff; font-weight: 600;
+  }
+  .role-pill:not(.active):hover {
+    border-color: var(--accent); color: var(--accent);
+  }
+  #loginCoach, #loginPass {
+    width: 100%; padding: 10px 0;
+    border: none; border-bottom: 2px solid var(--border);
+    font-family: 'Inter', sans-serif; font-size: 13.5px;
+    color: var(--text); background: transparent;
+    outline: none; margin-bottom: 18px;
+    appearance: none; -webkit-appearance: none;
+    cursor: pointer; transition: border-color .15s;
+  }
+  #loginCoach:focus, #loginPass:focus { border-bottom-color: var(--accent); }
+  #loginPass { background: transparent; outline: none; color: var(--text); }
+  #loginBtn {
+    width: 100%; padding: 11px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; margin-top: 6px; transition: opacity .15s;
+  }
+  #loginBtn:hover { opacity: .88; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}  60%{transform:translateX(-5px)}
+    80%{transform:translateX(5px)}
+  }
+  .shake { animation: shake .35s ease; }
+
+  /* ════════════════════════════════
+     VISIT MODAL
+  ════════════════════════════════ */
+  #visitModal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 900;
+  }
+  #visitCard {
+    background: #fff; border-radius: 12px;
+    padding: 28px 28px 24px; width: 290px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.22);
+  }
+  #visitTitle {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 18px; color: var(--text); margin-bottom: 4px;
+  }
+  #visitSub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  #visitErr {
+    background: #fdeaea; color: var(--down);
+    font-size: 12px; padding: 7px 10px;
+    border-radius: 6px; margin-bottom: 12px;
+    border: 1px solid #f5c6c6;
+  }
+  #visitCode {
+    width: 100%; padding: 9px 0;
+    border: none; border-bottom: 2px solid var(--border);
+    font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text); background: transparent;
+    outline: none; margin-bottom: 20px;
+    transition: border-color .15s;
+  }
+  #visitCode:focus { border-bottom-color: var(--accent); }
+  #visitBtns { display: flex; gap: 10px; }
+  #visitBtns button {
+    flex: 1; padding: 9px; border-radius: 7px; border: none;
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity .15s;
+  }
+  #visitBtns button:hover { opacity: .85; }
+  #visitBtns button:first-child { background: var(--accent-soft); color: var(--accent); }
+  #visitBtn { background: var(--accent); color: #fff; }
+
+  /* User chip in topbar */
+  .user-chip { display: flex; align-items: center; gap: 8px; }
+  .user-name { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+  .chip-btn {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 11px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface);
+    font-family: 'Inter', sans-serif; font-size: 12px;
+    color: var(--muted); cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+  .chip-btn:hover { background: var(--accent-soft); color: var(--accent); }
+  .chip-btn.danger:hover { background: #fdeaea; color: var(--down); border-color: #f5c6c6; }
+
+  /* Share Report menu */
+  .share-wrap { position: relative; }
+  .share-menu {
+    position: absolute; top: calc(100% + 6px); right: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.14);
+    overflow: hidden; z-index: 50; min-width: 160px;
+  }
+  .share-menu button {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 10px 14px; border: none; background: none; text-align: left;
+    font-family: 'Inter', sans-serif; font-size: 12.5px; color: var(--text); cursor: pointer;
+  }
+  .share-menu button:hover { background: var(--accent-soft); color: var(--accent); }
+  .share-menu button + button { border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div id="loginCard">
+    <div id="loginOrg">NIETE</div>
+    <div id="loginTitle">Observation History</div>
+    <div id="loginRolePills">
+      <button id="pillCoach" class="role-pill active" onclick="setLoginRole('coach')">Coach</button>
+      <button id="pillPrincipal" class="role-pill" onclick="setLoginRole('principal')">Principal</button>
+    </div>
+    <div id="loginErr" hidden></div>
+    <select id="loginCoach" onchange="onCoachSelect()">
+      <option value="" disabled selected>Select your name…</option>
+    </select>
+    <input type="password" id="loginPass" placeholder="Password…" autocomplete="current-password" />
+    <button id="loginBtn" onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<div id="visitModal" hidden>
+  <div id="visitCard">
+    <div id="visitTitle">Add Visit School</div>
+    <div id="visitSub">Enter the school's access code</div>
+    <div id="visitErr" hidden></div>
+    <input id="visitCode" type="text" placeholder="e.g. BF" autocomplete="off" />
+    <div id="visitBtns">
+      <button onclick="closeVisit()">Cancel</button>
+      <button id="visitBtn" onclick="doVisit()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-eyebrow">World Bank Teach Tool</div>
+      <div class="sidebar-title">Observation Score History</div>
+      <div class="school-wrap">
+        <select id="schoolSel" onchange="onSchoolChange()">
+          <option value="" disabled selected>Select a school…</option>
+          <option value="Al-Noor Academy">Al-Noor Academy</option>
+          <option value="Bright Future School">Bright Future School</option>
+          <option value="City Grammar School">City Grammar School</option>
+          <option value="Daanish Public School">Daanish Public School</option>
+          <option value="Evergreen Institute">Evergreen Institute</option>
+          <option value="Falcon Academy">Falcon Academy</option>
+          <option value="Greenwood Public School">Greenwood Public School</option>
+          <option value="Horizon Model School">Horizon Model School</option>
+          <option value="Iqra Education Centre">Iqra Education Centre</option>
+          <option value="Junior Scholars Academy">Junior Scholars Academy</option>
+          <option value="Knowledge Valley School">Knowledge Valley School</option>
+          <option value="Lighthouse Academy">Lighthouse Academy</option>
+        </select>
+      </div>
+    </div>
+    <div class="list-label">Teachers</div>
+    <div class="sidebar-controls">
+      <input type="text" id="teacherSearch" placeholder="Search teachers…" oninput="updateSearch(this.value)" autocomplete="off" />
+      <div class="filter-pills">
+        <button class="fpill active" data-trend="all"      onclick="updateFilter('all')">All</button>
+        <button class="fpill" data-trend="Improving" onclick="updateFilter('Improving')" style="color:#69f0ae">↑</button>
+        <button class="fpill" data-trend="Steady"    onclick="updateFilter('Steady')"    style="color:rgba(255,255,255,.7)">→</button>
+        <button class="fpill" data-trend="Declining" onclick="updateFilter('Declining')" style="color:#ff5252">↓</button>
+      </div>
+    </div>
+    <div class="teacher-list" id="teacherList"></div>
+  </aside>
+
+  <!-- ════════════ MAIN ════════════ -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="topbar-left" id="topbarLeft">
+        <div class="topbar-name" id="topName">Observation Score History</div>
+        <div class="topbar-meta" id="topMeta">Select a school to begin</div>
+      </div>
+      <div class="user-chip" id="userChip" hidden>
+        <span class="user-name" id="chipName"></span>
+        <button class="chip-btn" id="addSchoolBtn" onclick="openVisit()">+ Add School</button>
+        <button class="chip-btn danger" onclick="doLogout()">Sign out</button>
+      </div>
+    </div>
+
+    <div class="kpi-strip" id="kpiStrip"></div>
+
+    <div class="content" id="content"></div>
+
+  </main>
+</div>
+
+<script>
+/* ── Data ── */
+const INDICATORS = [
+  "Objective Clarity",
+  "Student Engagement",
+  "Class Management",
+  "Instructional Quality"
+];
+const IND_SHORT = ["Obj. Clarity","Engagement","Class Mgmt","Instr. Quality"];
+const MONTHS = ["Sept","Oct","Nov","Dec","Jan","Feb"];
+const COACHES = {
+  "Al-Noor Academy":         "Saima Jabeen",
+  "Bright Future School":    "Saima Jabeen",
+  "City Grammar School":     "Saima Jabeen",
+  "Daanish Public School":   "Aneela Khaliq",
+  "Evergreen Institute":     "Aneela Khaliq",
+  "Falcon Academy":          "Javeria Khalil",
+  "Greenwood Public School": "Javeria Khalil",
+  "Horizon Model School":    "Hafsa Bashir",
+  "Iqra Education Centre":   "Hafsa Bashir",
+  "Junior Scholars Academy": "Iqra Arshad",
+  "Knowledge Valley School": "Iqra Arshad",
+  "Lighthouse Academy":      "Ashas Khan",
+  "Minhaj Public School":    "Rabia Saeed",
+  "New Horizon School":      "Usman Tariq",
+};
+const USER_DB = {
+  "saima jabeen":   { name: "Saima Jabeen",   pass: "123", role: "coach",     schools: ["Al-Noor Academy","Bright Future School","City Grammar School"] },
+  "aneela khaliq":  { name: "Aneela Khaliq",  pass: "123", role: "coach",     schools: ["Daanish Public School","Evergreen Institute"] },
+  "javeria khalil": { name: "Javeria Khalil", pass: "123", role: "coach",     schools: ["Falcon Academy","Greenwood Public School"] },
+  "hafsa bashir":   { name: "Hafsa Bashir",   pass: "123", role: "coach",     schools: ["Horizon Model School","Iqra Education Centre"] },
+  "iqra arshad":    { name: "Iqra Arshad",    pass: "123", role: "coach",     schools: ["Junior Scholars Academy","Knowledge Valley School"] },
+  "ashas khan":     { name: "Ashas Khan",     pass: "123", role: "coach",     schools: ["Lighthouse Academy"] },
+  "rabia saeed":    { name: "Rabia Saeed",    pass: "123", role: "coach",     schools: ["Minhaj Public School"] },
+  "usman tariq":    { name: "Usman Tariq",    pass: "123", role: "coach",     schools: ["New Horizon School"] },
+  "admin":          { name: "Administrator",  pass: "admin", role: "admin",   schools: null },
+  "principal alnoor":       { name: "Principal (Al-Noor Academy)",        pass: "123", role: "principal", schools: ["Al-Noor Academy"] },
+  "principal brightfuture": { name: "Principal (Bright Future School)",   pass: "123", role: "principal", schools: ["Bright Future School"] },
+  "principal citygrammar":  { name: "Principal (City Grammar School)",    pass: "123", role: "principal", schools: ["City Grammar School"] },
+  "principal daanish":      { name: "Principal (Daanish Public School)",  pass: "123", role: "principal", schools: ["Daanish Public School"] },
+  "principal evergreen":    { name: "Principal (Evergreen Institute)",    pass: "123", role: "principal", schools: ["Evergreen Institute"] },
+  "principal falcon":       { name: "Principal (Falcon Academy)",         pass: "123", role: "principal", schools: ["Falcon Academy"] },
+  "principal greenwood":    { name: "Principal (Greenwood Public School)",pass: "123", role: "principal", schools: ["Greenwood Public School"] },
+  "principal horizon":      { name: "Principal (Horizon Model School)",   pass: "123", role: "principal", schools: ["Horizon Model School"] },
+  "principal iqra":         { name: "Principal (Iqra Education Centre)",  pass: "123", role: "principal", schools: ["Iqra Education Centre"] },
+  "principal junior":       { name: "Principal (Junior Scholars Academy)",pass: "123", role: "principal", schools: ["Junior Scholars Academy"] },
+  "principal knowledge":    { name: "Principal (Knowledge Valley School)",pass: "123", role: "principal", schools: ["Knowledge Valley School"] },
+  "principal lighthouse":   { name: "Principal (Lighthouse Academy)",     pass: "123", role: "principal", schools: ["Lighthouse Academy"] },
+  "principal minhaj":       { name: "Principal (Minhaj Public School)",   pass: "123", role: "principal", schools: ["Minhaj Public School"] },
+  "principal newhorizon":   { name: "Principal (New Horizon School)",     pass: "123", role: "principal", schools: ["New Horizon School"] },
+};
+const SCHOOL_CODES = {
+  "ANA": "Al-Noor Academy",
+  "BFS": "Bright Future School",
+  "CGS": "City Grammar School",
+  "DPS": "Daanish Public School",
+  "EI":  "Evergreen Institute",
+  "FA":  "Falcon Academy",
+  "GPS": "Greenwood Public School",
+  "HMS": "Horizon Model School",
+  "IEC": "Iqra Education Centre",
+  "JSA": "Junior Scholars Academy",
+  "KVS": "Knowledge Valley School",
+  "LA":  "Lighthouse Academy",
+  "MPS": "Minhaj Public School",
+  "NHS": "New Horizon School",
+};
+const DATA = [
+  {school:'Junior Scholars Academy',name:'Omar Sattar (2 subjects)',months:[49.6,58.6,50.4,51,54.6,46.5],obsAvg:52.8,trend:'Declining',cats:[76,71.2,58.5,61.2]},
+  {school:'Junior Scholars Academy',name:'Habib Danish',months:[59,61.4,64,67.7,70.4,74.3],obsAvg:66.1,trend:'Improving',cats:[69.6,80,58,65.9]},
+  {school:'Lighthouse Academy',name:'Zahid Raza',months:[70.9,null,66.8,62.9,64.7,60.3],obsAvg:65.1,trend:'Declining',cats:[76.4,87.3,89.1,61.7]},
+  {school:'Junior Scholars Academy',name:'Ahsan Rauf',months:[63.7,59.4,60.8,59.5,58.1,59.1],obsAvg:60.1,trend:'Declining',cats:[91.5,80.8,90,73.8]},
+  {school:'Daanish Public School',name:'Nadia Gondal (3 subjects)',months:[63.1,64.2,63.5,65.7,55.2,55.3],obsAvg:63.6,trend:'Declining',cats:[82,53.1,76,71.2]},
+  {school:'Junior Scholars Academy',name:'Latif Sajid',months:[47.5,55,53.2,56,61.5,61],obsAvg:55.7,trend:'Improving',cats:[59.5,62.8,46.3,86.2]},
+  {school:'Minhaj Public School',name:'Tariq Mehmood',months:[66.9,70.4,71.6,72.1,74.6,77.5],obsAvg:72.2,trend:'Improving',cats:[79.4,null,94.2,65]},
+  {school:'Daanish Public School',name:'Amna Anwar',months:[60.1,null,63,70.5,null,72.5],obsAvg:66.5,trend:'Improving',cats:[93.3,47.2,73,49.1]},
+  {school:'Al-Noor Academy',name:'Hina Mirza',months:[59.1,64.4,68.1,69.3,null,75.9],obsAvg:67.4,trend:'Improving',cats:[52.1,64.1,65.3,93.7]},
+  {school:'Minhaj Public School',name:'Bukhari Layla',months:[79.4,82.4,80.8,84.7,82.3,87.5],obsAvg:82.9,trend:'Improving',cats:[92.3,57.7,null,59.6]},
+  {school:'Lighthouse Academy',name:'Latif Rauf',months:[67.9,null,71.2,70.3,75.6,82.9],obsAvg:73.6,trend:'Improving',cats:[73.9,75.2,null,82.5]},
+  {school:'Al-Noor Academy',name:'Owais Baig',months:[50.9,53.9,50.6,51.2,null,47.4],obsAvg:50.8,trend:'Declining',cats:[94.5,85.3,58.2,65.8]},
+  {school:'Falcon Academy',name:'Irfan Sheikh',months:[74.1,null,68.4,68.4,null,66.8],obsAvg:69.4,trend:'Declining',cats:[55.8,45,54.1,53.9]},
+  {school:'Junior Scholars Academy',name:'Kamran Aslam',months:[null,81.9,80.5,87.6,88.5,93.1],obsAvg:86.3,trend:'Improving',cats:[82,49.4,79.1,null]},
+  {school:'Minhaj Public School',name:'Erum Habib',months:[66.6,61.8,63.8,61.2,56.1,58.1],obsAvg:61.3,trend:'Declining',cats:[57.8,null,49.3,null]},
+  {school:'Al-Noor Academy',name:'Imran Hussain (3 subjects)',months:[66.2,55.6,59.5,59.9,58.4,63.2],obsAvg:59.9,trend:'Steady',cats:[76.5,75.2,53.9,63.3]},
+  {school:'Bright Future School',name:'Rubina Ali',months:[null,67.5,null,73.9,76.6,75.4],obsAvg:73.3,trend:'Improving',cats:[71.5,56,62.7,68.7]},
+  {school:'Falcon Academy',name:'Naila Siddiqui',months:[63.5,null,64.3,0,56.8,54.3],obsAvg:47.8,trend:'Declining',cats:[50.4,80.5,51.2,92.5]},
+  {school:'Iqra Education Centre',name:'Kamran Saleem',months:[76.5,75.1,77.2,83,83.6,80.6],obsAvg:79.3,trend:'Improving',cats:[60.7,94.9,88.4,82.8]},
+  {school:'Iqra Education Centre',name:'Shahzad Baig (3 subjects)',months:[68.7,64.8,66.7,70,60.5,60.9],obsAvg:63.8,trend:'Declining',cats:[70,71,62.9,70.6]},
+  {school:'Horizon Model School',name:'Lubna Bukhari',months:[61.8,66.7,null,70.5,73.5,79.4],obsAvg:70.4,trend:'Improving',cats:[85.5,89.7,70.4,51.5]},
+  {school:'Junior Scholars Academy',name:'Faizan Rauf',months:[69,69.3,72.1,null,null,76.4],obsAvg:71.7,trend:'Improving',cats:[77,81.6,92.5,92.3]},
+  {school:'Minhaj Public School',name:'Shazia Nasir',months:[51.3,52.8,53.6,null,56.5,63.6],obsAvg:55.6,trend:'Improving',cats:[88.3,94.6,86.9,67.1]},
+  {school:'Lighthouse Academy',name:'Ghazala Nasir',months:[67.8,65.5,65,62.4,58.2,55.8],obsAvg:62.4,trend:'Declining',cats:[78.7,47,92.6,58.2]},
+  {school:'Iqra Education Centre',name:'Rabia Baig',months:[null,52.3,51.4,55.5,59.2,60.1],obsAvg:55.7,trend:'Improving',cats:[91.8,89.6,69.7,74.1]},
+  {school:'Al-Noor Academy',name:'Shazia Nasir',months:[58.9,62.8,68.3,69.9,66.2,null],obsAvg:65.2,trend:'Improving',cats:[60.8,78.2,90,45.5]},
+  {school:'Minhaj Public School',name:'Ghazala Zafar',months:[66.7,68.1,71.5,72.3,73.3,76.1],obsAvg:71.3,trend:'Improving',cats:[67.1,83,63.3,55]},
+  {school:'New Horizon School',name:'Rizwan Shahid',months:[50.5,52.8,58.6,61.5,0,69.4],obsAvg:48.8,trend:'Improving',cats:[72.1,77.3,58.6,null]},
+  {school:'Evergreen Institute',name:'Erum Habib',months:[81.2,77,null,77.9,72.3,79.2],obsAvg:77.5,trend:'Steady',cats:[94.2,93.7,48.3,79.1]},
+  {school:'Knowledge Valley School',name:'Maryam Rashid (2 subjects)',months:[63.9,69,71,73,71.2,72.8],obsAvg:70.5,trend:'Improving',cats:[75.2,48.5,58,64.8]},
+  {school:'Junior Scholars Academy',name:'Ghazala Hashmi',months:[60.6,62.2,null,61.4,67.3,66.5],obsAvg:63.6,trend:'Steady',cats:[94.4,73.9,80.9,53.4]},
+  {school:'Lighthouse Academy',name:'Latif Akhtar',months:[56.4,60.8,64.4,67.1,68.3,73.5],obsAvg:65.1,trend:'Improving',cats:[79,70.6,69.9,90.5]},
+  {school:'New Horizon School',name:'Pervaiz Yousaf',months:[48.9,54.8,58.9,57.7,60.4,67.6],obsAvg:58.1,trend:'Improving',cats:[54.9,null,66.5,68.6]},
+  {school:'Falcon Academy',name:'Pervaiz Tariq',months:[78.4,81.5,84.8,86.2,82.1,87.6],obsAvg:83.4,trend:'Improving',cats:[87,55.3,83.9,53.3]},
+  {school:'Bright Future School',name:'Hamid Yousaf',months:[63.3,59.5,63.2,55.9,58.5,53.3],obsAvg:58.9,trend:'Declining',cats:[71.3,88.8,91.5,48.2]},
+  {school:'New Horizon School',name:'Zara Kashmiri',months:[72.4,null,76.3,78.1,86.7,89],obsAvg:80.5,trend:'Improving',cats:[null,48.6,81.3,64]},
+  {school:'City Grammar School',name:'Uzma Malik',months:[50.4,54.1,null,48.2,48.6,54.5],obsAvg:51.2,trend:'Steady',cats:[null,75,90.3,null]},
+  {school:'Evergreen Institute',name:'Quratulain Rauf (2 subjects)',months:[70.4,66.5,70.5,70.6,72.7,74.4],obsAvg:70.8,trend:'Improving',cats:[56.9,77.9,78,67]},
+  {school:'Lighthouse Academy',name:'Naveed Ali',months:[59.8,68.3,65.5,null,72,72.5],obsAvg:67.6,trend:'Improving',cats:[84.7,73,83,87.1]},
+  {school:'Evergreen Institute',name:'Nadia Habib',months:[63.3,null,67.7,69.4,77.5,72.5],obsAvg:70.1,trend:'Improving',cats:[55.4,75.2,null,76.2]},
+  {school:'Al-Noor Academy',name:'Faizan Zafar',months:[null,64.4,65.5,69.3,null,67.7],obsAvg:66.7,trend:'Improving',cats:[59.6,72.7,83.7,72.5]},
+  {school:'City Grammar School',name:'Shazia Nasir (2 subjects)',months:[56.8,61.8,55.6,59,63.4,63.3],obsAvg:60,trend:'Improving',cats:[76.2,67.4,91.6,58.5]},
+  {school:'New Horizon School',name:'Quratulain Bhatti',months:[62.7,62.2,59.7,0,52.4,51.3],obsAvg:48.1,trend:'Declining',cats:[86.9,66.1,73.1,85.8]},
+  {school:'Greenwood Public School',name:'Saira Malik (2 subjects)',months:[73.4,71.4,69.3,70.2,62.3,63],obsAvg:68.6,trend:'Declining',cats:[86.6,68.8,64.1,78.6]},
+  {school:'New Horizon School',name:'Akhtar Shahzad',months:[73,73.8,66.4,68.1,null,66.3],obsAvg:69.5,trend:'Declining',cats:[63.2,92.7,72.6,75.9]},
+  {school:'Falcon Academy',name:'Yusra Farhan',months:[55.3,56.7,55.6,49.6,48.1,50.5],obsAvg:52.6,trend:'Declining',cats:[70.9,92.9,88.4,47.3]},
+  {school:'Al-Noor Academy',name:'Yusra Dogar (2 subjects)',months:[65.2,65.4,51.8,50.6,70.2,67.2],obsAvg:66.4,trend:'Steady',cats:[76.2,73.4,83,54.2]},
+  {school:'Evergreen Institute',name:'Imran Ali',months:[48.3,null,45,54,null,48.8],obsAvg:49,trend:'Steady',cats:[79.1,75.3,91.9,57.2]},
+  {school:'Horizon Model School',name:'Sadia Baig',months:[67.7,64.8,70.7,73.2,79.4,73.7],obsAvg:71.6,trend:'Improving',cats:[49.1,null,67.9,70.5]},
+  {school:'Junior Scholars Academy',name:'Hamid Cheema',months:[62.9,59.4,53.3,56.7,52,50],obsAvg:55.7,trend:'Declining',cats:[82.5,78.8,90.9,60.3]},
+  {school:'Junior Scholars Academy',name:'Shazia Nasir',months:[77,null,81.3,83,86.2,90.9],obsAvg:83.7,trend:'Improving',cats:[null,81.3,82.7,70.5]},
+  {school:'Lighthouse Academy',name:'Ahsan Kashmiri',months:[null,80.9,78.2,86.1,82.5,88.2],obsAvg:83.2,trend:'Improving',cats:[null,47.1,null,null]},
+  {school:'Greenwood Public School',name:'Wahid Rashid',months:[52.2,56.6,null,65.8,65.9,63.2],obsAvg:60.7,trend:'Improving',cats:[78.8,null,null,74.3]},
+  {school:'City Grammar School',name:'Bushra Sajid',months:[59.6,57.3,null,64,70.2,70.6],obsAvg:64.3,trend:'Improving',cats:[null,78.6,67.3,63.3]},
+  {school:'Lighthouse Academy',name:'Bushra Javed (2 subjects)',months:[58.6,58.6,50.4,54.3,null,56.2],obsAvg:57.1,trend:'Steady',cats:[82.2,65,70.4,74.8]},
+  {school:'City Grammar School',name:'Erum Habib',months:[79.7,null,73.3,null,80.1,74.6],obsAvg:76.9,trend:'Steady',cats:[88.7,null,78.2,81.1]},
+  {school:'City Grammar School',name:'Samina Yousaf',months:[47.2,47.5,null,null,57.9,56.9],obsAvg:52.4,trend:'Improving',cats:[90.2,94.7,86.8,null]},
+  {school:'Horizon Model School',name:'Shazia Nasir',months:[64.2,70.1,70.8,71.6,77,73.7],obsAvg:71.2,trend:'Improving',cats:[55.1,56.1,52.9,51.4]},
+  {school:'City Grammar School',name:'Shazia Butt',months:[76.8,78.4,null,86,null,89.1],obsAvg:82.6,trend:'Improving',cats:[86.1,88,50.1,88.1]},
+  {school:'Horizon Model School',name:'Jaweria Farooq',months:[61.1,61.3,null,69.5,73.8,67.8],obsAvg:66.7,trend:'Improving',cats:[67.6,72.4,88.6,null]},
+  {school:'Bright Future School',name:'Omar Riaz',months:[66.6,null,63.6,null,63,54.9],obsAvg:62,trend:'Declining',cats:[87.1,64.8,null,82.1]},
+  {school:'Falcon Academy',name:'Owais Sheikh',months:[79.9,77.5,75.3,71.2,71.5,72],obsAvg:74.6,trend:'Declining',cats:[77.4,77.4,86.3,54.8]},
+  {school:'Lighthouse Academy',name:'Bushra Qureshi',months:[77.7,79.3,81,84.1,null,null],obsAvg:80.5,trend:'Improving',cats:[45.6,66.5,59.5,54.3]},
+  {school:'Junior Scholars Academy',name:'Bushra Farhan',months:[53.1,54.8,54.5,54.6,60.7,57.6],obsAvg:55.9,trend:'Improving',cats:[69.2,54.5,77.6,95]},
+  {school:'Falcon Academy',name:'Yusra Dogar',months:[69.4,71.4,66.2,null,59.2,58.7],obsAvg:65,trend:'Declining',cats:[78.2,null,null,null]},
+  {school:'Horizon Model School',name:'Shazia Aziz',months:[76.4,82.6,80.3,86,null,0],obsAvg:65.1,trend:'Improving',cats:[88.4,47.7,45.1,93.2]},
+  {school:'Falcon Academy',name:'Imran Zafar',months:[56.7,56.3,51.4,47.5,46.9,43.1],obsAvg:50.3,trend:'Declining',cats:[79.3,78.6,88.6,86.3]},
+  {school:'Greenwood Public School',name:'Benazir Chaudhry',months:[55.1,45.3,44.7,null,51.8,55.2],obsAvg:50.4,trend:'Steady',cats:[84.9,92.5,49.2,null]},
+  {school:'Minhaj Public School',name:'Shahzad Saleem',months:[69.4,68.8,null,65.9,67.9,64.1],obsAvg:67.2,trend:'Declining',cats:[79.5,94.8,80.2,87.3]},
+  {school:'City Grammar School',name:'Mariam Habib',months:[55.5,53.1,54.2,55.8,54,54.9],obsAvg:54.6,trend:'Steady',cats:[58.1,null,70.3,94.3]},
+  {school:'Falcon Academy',name:'Zara Bhatti',months:[61.3,61.9,60.2,57.4,53.9,null],obsAvg:58.9,trend:'Declining',cats:[67.2,46.3,65.6,47.4]},
+  {school:'Falcon Academy',name:'Hina Dogar',months:[68.9,66.7,65.1,null,56.8,59.8],obsAvg:63.5,trend:'Declining',cats:[85.1,94.5,72.8,78.4]},
+  {school:'Iqra Education Centre',name:'Rubina Noon',months:[74.8,75.2,71.2,70.5,null,null],obsAvg:72.9,trend:'Declining',cats:[58.3,51.6,78.3,68.4]},
+  {school:'City Grammar School',name:'Naila Gilani',months:[71.5,73.6,77.2,80.9,83.8,86.7],obsAvg:79,trend:'Improving',cats:[49.5,93.3,null,59.8]},
+  {school:'Junior Scholars Academy',name:'Qasim Tariq',months:[62.3,52.1,56.3,58.5,61,53.3],obsAvg:57.2,trend:'Steady',cats:[70.5,54,94.8,72.1]},
+  {school:'Bright Future School',name:'Sadia Baig',months:[48.6,52.1,53.4,null,61.8,65.7],obsAvg:56.3,trend:'Improving',cats:[45.5,75.7,56.2,49.7]},
+  {school:'Iqra Education Centre',name:'Zainab Sheikh',months:[47.5,51.1,50.7,55.6,56.6,59.9],obsAvg:53.6,trend:'Improving',cats:[87.1,56.1,62.2,82.8]},
+  {school:'Evergreen Institute',name:'Erum Rashid',months:[77.8,null,82.7,84.1,82.9,83.8],obsAvg:82.3,trend:'Improving',cats:[53.5,64.9,92,null]},
+  {school:'Falcon Academy',name:'Yusra Ali',months:[75.5,80.4,80.8,87.1,87.8,87.6],obsAvg:83.2,trend:'Improving',cats:[50.4,76.6,54.6,73.3]},
+  {school:'New Horizon School',name:'Rabia Tariq',months:[76.9,null,79.9,82,83.9,83.1],obsAvg:81.2,trend:'Improving',cats:[92.3,65.5,91.8,87.6]},
+  {school:'Falcon Academy',name:'Owais Malik',months:[73.9,78.5,77.9,84.2,83.8,82.3],obsAvg:80.1,trend:'Improving',cats:[77.7,72.4,58.7,64.7]},
+  {school:'Junior Scholars Academy',name:'Faizan Zafar',months:[76.2,74.6,73.2,70.6,68.6,62.4],obsAvg:70.9,trend:'Declining',cats:[null,60.6,83.2,63.8]},
+  {school:'New Horizon School',name:'Jaweria Sajid (2 subjects)',months:[60.7,null,48,45.2,50.6,52.6],obsAvg:52.4,trend:'Declining',cats:[90.1,84.1,66.8,72.3]},
+  {school:'Falcon Academy',name:'Pervaiz Farhan',months:[63.3,68.9,72.1,66.1,69.8,67],obsAvg:67.9,trend:'Steady',cats:[64.4,54.3,61.3,81]},
+  {school:'New Horizon School',name:'Sadia Baig',months:[56.7,54.5,52.1,51.6,51.3,50.5],obsAvg:52.8,trend:'Declining',cats:[61,51.3,62.9,79.8]},
+  {school:'City Grammar School',name:'Asif Chaudhry',months:[61.7,61.1,62.9,66,56.6,60.4],obsAvg:61.4,trend:'Steady',cats:[52.1,53.4,null,69]},
+  {school:'New Horizon School',name:'Tariq Khan',months:[52.7,55.3,60.6,65.7,70.5,74.2],obsAvg:63.2,trend:'Improving',cats:[54.4,85.2,92.7,85.2]},
+  {school:'Evergreen Institute',name:'Saira Malik',months:[59.6,63.6,64.8,68.1,68,74.5],obsAvg:66.4,trend:'Improving',cats:[69.3,85.1,70.6,60.7]},
+  {school:'New Horizon School',name:'Yasmeen Nasir',months:[51.3,53.1,53.2,54.5,54,45.7],obsAvg:52,trend:'Steady',cats:[68.7,72.2,67.7,82.4]},
+  {school:'Al-Noor Academy',name:'Hassan Butt',months:[58.7,61.2,57.4,61,66.8,66.9],obsAvg:62,trend:'Improving',cats:[66.8,81.9,77.1,91.5]},
+  {school:'Evergreen Institute',name:'Rashid Iqbal',months:[72.8,74.5,77.3,78.1,85.1,82.9],obsAvg:78.5,trend:'Improving',cats:[63.1,49.9,55.2,null]},
+  {school:'Falcon Academy',name:'Mariam Ali',months:[71.1,0,82.5,null,79.2,88.2],obsAvg:64.2,trend:'Improving',cats:[88.2,87.1,90.7,90.7]},
+  {school:'Horizon Model School',name:'Jaweria Zafar',months:[63.3,66.1,71.1,76,77.8,78.2],obsAvg:72.1,trend:'Improving',cats:[89.4,94.7,85.4,68]},
+  {school:'New Horizon School',name:'Ghazala Gilani',months:[null,54.1,50.5,52.4,54.4,50.3],obsAvg:52.3,trend:'Declining',cats:[50.6,72.1,72.3,92.8]},
+  {school:'Falcon Academy',name:'Zahid Noon',months:[67.9,69.6,77.7,78.8,null,76.1],obsAvg:74,trend:'Improving',cats:[74.7,90.7,93.7,80.8]},
+  {school:'Junior Scholars Academy',name:'Erum Habib (2 subjects)',months:[64.7,67.3,69.1,66.2,66.5,63.2],obsAvg:65.8,trend:'Steady',cats:[70.6,63.8,83.1,68]},
+  {school:'Knowledge Valley School',name:'Owais Malik',months:[52.9,54.2,58.4,57.5,null,63.1],obsAvg:57.2,trend:'Improving',cats:[60.9,65.4,51.2,52.3]},
+  {school:'Horizon Model School',name:'Bushra Aziz',months:[77.3,81.3,79.4,82.6,82.6,95],obsAvg:83,trend:'Improving',cats:[92.1,70.8,47.2,89]},
+  {school:'Lighthouse Academy',name:'Urooj Sheikh',months:[57.7,57.2,56.6,53,50.4,48.3],obsAvg:53.9,trend:'Declining',cats:[null,87.3,51.8,49.8]},
+  {school:'City Grammar School',name:'Shazia Dogar',months:[53.5,60.3,null,58.1,60.2,72.6],obsAvg:60.9,trend:'Improving',cats:[82.6,77.8,75.3,94.5]},
+  {school:'Horizon Model School',name:'Pervaiz Rashid',months:[61.6,71.1,61,null,null,62.9],obsAvg:64.2,trend:'Steady',cats:[65,50.9,75,93.4]},
+  {school:'Evergreen Institute',name:'Faizan Zafar',months:[53,53.4,56.9,null,0,60.5],obsAvg:44.8,trend:'Improving',cats:[60.7,47.1,82.5,58.2]},
+  {school:'Knowledge Valley School',name:'Asif Rafiq',months:[58.3,61.4,59.4,69.7,69.6,null],obsAvg:63.7,trend:'Improving',cats:[82.3,91.5,59.3,78.4]},
+  {school:'Falcon Academy',name:'Ahsan Riaz',months:[67.8,67.5,69.6,77.9,81.5,83.3],obsAvg:74.6,trend:'Improving',cats:[null,80.2,65.6,85.1]},
+  {school:'Bright Future School',name:'Saira Kashmiri',months:[71.4,71.1,74.7,78.6,80,81.2],obsAvg:76.2,trend:'Improving',cats:[74.7,56.2,81.9,null]},
+  {school:'Junior Scholars Academy',name:'Quratulain Akhtar',months:[64.8,59.9,null,58.4,58.3,56.4],obsAvg:59.6,trend:'Declining',cats:[52.7,52.5,74.3,45.6]},
+  {school:'Bright Future School',name:'Jaweria Rauf (2 subjects)',months:[69,73.6,77,79.4,83.4,87.4],obsAvg:78.3,trend:'Improving',cats:[76.8,53.7,64,67.4]},
+  {school:'New Horizon School',name:'Noman Malik',months:[54.9,56,51.1,49.3,46.8,50.4],obsAvg:51.4,trend:'Declining',cats:[56.3,93.4,72.5,68.5]},
+  {school:'City Grammar School',name:'Vaqar Bajwa',months:[56.8,58.4,59.8,63.2,65.5,65],obsAvg:61.4,trend:'Improving',cats:[69,71.8,55.9,null]},
+  {school:'City Grammar School',name:'Zahid Malik',months:[51.7,57.9,55.9,51.1,58,50.8],obsAvg:54.2,trend:'Steady',cats:[63.6,87.2,73.4,94.5]},
+  {school:'Horizon Model School',name:'Benazir Janjua',months:[77.1,81.3,81.4,81.3,87.8,92.1],obsAvg:83.5,trend:'Improving',cats:[null,72.2,65.9,88.2]},
+  {school:'Junior Scholars Academy',name:'Ahsan Gondal',months:[67.7,65.9,64.2,61,60.3,57.9],obsAvg:62.8,trend:'Declining',cats:[66.6,48.7,72.8,56.7]},
+  {school:'Junior Scholars Academy',name:'Kamran Shahid',months:[76.6,78.3,83.8,88.7,85.7,90.4],obsAvg:83.9,trend:'Improving',cats:[null,53.1,51.1,68.6]},
+  {school:'City Grammar School',name:'Zahid Janjua',months:[74,null,66.7,62.1,64.4,null],obsAvg:66.8,trend:'Declining',cats:[77.1,85.3,51.4,72.2]},
+  {school:'New Horizon School',name:'Rizwan Yousaf',months:[58.8,64,65.1,66,73.5,68.4],obsAvg:66,trend:'Improving',cats:[83.3,91.8,77.8,92.6]},
+  {school:'Minhaj Public School',name:'Asif Iqbal (2 subjects)',months:[57.6,54.6,55.6,50.9,48.1,51.9],obsAvg:54.1,trend:'Declining',cats:[75.6,68,76.4,68.6]},
+  {school:'Falcon Academy',name:'Yasmeen Saleem',months:[66.2,66.1,62.2,60.9,57,62.2],obsAvg:62.4,trend:'Declining',cats:[94.2,47.1,90.7,78.7]},
+  {school:'New Horizon School',name:'Saira Malik',months:[68.4,64.2,69.9,70,58.4,68.3],obsAvg:66.5,trend:'Steady',cats:[81.6,53.6,77.1,54.7]},
+  {school:'Al-Noor Academy',name:'Naila Mehmood',months:[67.8,67.2,72.3,76.9,73.6,74.7],obsAvg:72.1,trend:'Improving',cats:[51.1,66.5,82.7,50.6]},
+  {school:'City Grammar School',name:'Kiran Chaudhry',months:[51.9,54.7,56.7,54.3,59.3,62.2],obsAvg:56.5,trend:'Improving',cats:[62,76.7,70.9,48.6]},
+  {school:'Falcon Academy',name:'Parveen Hayat',months:[54,51.1,null,46.3,49.1,54.2],obsAvg:50.9,trend:'Steady',cats:[74,85.4,80.3,50.6]},
+  {school:'Horizon Model School',name:'Benazir Chaudhry',months:[63.7,64.7,73.2,null,63.1,71.9],obsAvg:67.3,trend:'Steady',cats:[65.9,78.7,61.2,null]},
+  {school:'City Grammar School',name:'Bushra Anwar',months:[null,52.8,50.3,null,48.5,null],obsAvg:50.5,trend:'Declining',cats:[61,null,62.1,82.6]},
+  {school:'Junior Scholars Academy',name:'Mehwish Kashmiri',months:[76.1,null,81.9,null,91.2,93.6],obsAvg:85.7,trend:'Improving',cats:[87.5,87.8,90,78.9]},
+  {school:'Falcon Academy',name:'Rubina Raza',months:[51,52.4,55.3,58.8,64.7,null],obsAvg:56.4,trend:'Improving',cats:[64.5,81.5,null,78.3]},
+  {school:'Horizon Model School',name:'Usman Bhatti',months:[59,64.9,61.2,66.6,null,73.1],obsAvg:65,trend:'Improving',cats:[72.1,72.2,46.9,48.5]},
+  {school:'Horizon Model School',name:'Ahsan Ali',months:[77.5,78.6,null,78.5,72.5,68.1],obsAvg:75,trend:'Steady',cats:[72.7,89.3,67.9,47.7]},
+  {school:'Falcon Academy',name:'Zahid Yousaf',months:[61.2,61.8,66,71.1,72.2,79.6],obsAvg:68.6,trend:'Improving',cats:[57.8,null,49.4,94.7]},
+  {school:'Iqra Education Centre',name:'Samina Anwar',months:[50.6,51.4,null,48.3,48,null],obsAvg:49.6,trend:'Declining',cats:[48.6,72.5,85,77.1]},
+  {school:'Horizon Model School',name:'Hamid Cheema',months:[68.2,64.7,null,77.5,78.6,82.3],obsAvg:74.3,trend:'Improving',cats:[null,87.5,60.5,66.3]},
+  {school:'Junior Scholars Academy',name:'Benazir Rashid',months:[73.3,75.3,null,null,81.2,84.4],obsAvg:78.5,trend:'Improving',cats:[81,80.4,88.9,71.8]},
+  {school:'New Horizon School',name:'Lubna Ali',months:[null,65.5,null,68.9,62,61.2],obsAvg:64.4,trend:'Declining',cats:[45.6,null,91.5,52.4]},
+  {school:'New Horizon School',name:'Usman Noon',months:[76.4,74,null,76,null,68.5],obsAvg:73.7,trend:'Declining',cats:[79.3,95,90.4,86.8]},
+  {school:'New Horizon School',name:'Sajid Jaweria',months:[71.2,73.1,null,77.4,76.3,null],obsAvg:74.5,trend:'Improving',cats:[48.3,93.9,70.3,52.9]},
+  {school:'Minhaj Public School',name:'Latif Akhtar',months:[75,78.6,79.4,77.8,80.8,85.1],obsAvg:79.5,trend:'Improving',cats:[72.6,69.8,93.2,83.5]},
+  {school:'Bright Future School',name:'Wahid Qureshi',months:[66.2,68.7,64.3,null,63.8,59.6],obsAvg:64.5,trend:'Declining',cats:[68.9,93.4,75.7,89.4]},
+  {school:'Al-Noor Academy',name:'Fatima Shahid',months:[null,57.6,61.5,null,66.4,64.8],obsAvg:62.6,trend:'Improving',cats:[52.5,84.4,63.6,78.3]},
+  {school:'City Grammar School',name:'Asif Siddiqui',months:[60.1,54.6,55.2,54.5,50.7,44.4],obsAvg:53.2,trend:'Declining',cats:[76.5,71.4,74.2,65.9]},
+  {school:'New Horizon School',name:'Riaz Uzma',months:[65.4,null,null,null,66.9,64.8],obsAvg:65.7,trend:'Steady',cats:[76.3,64.2,78.5,79]},
+  {school:'Junior Scholars Academy',name:'Usman Gondal',months:[null,54.9,53.8,53.1,47.8,null],obsAvg:52.4,trend:'Declining',cats:[51.4,81.2,55.3,87.1]},
+  {school:'City Grammar School',name:'Quratulain Javed',months:[null,null,67.1,71.6,72.9,69.6],obsAvg:70.3,trend:'Improving',cats:[null,73.7,56.9,79.6]},
+  {school:'Minhaj Public School',name:'Fatima Mehmood',months:[null,50.8,null,null,59.6,59.8],obsAvg:56.7,trend:'Improving',cats:[75.1,71,87.9,null]},
+  {school:'Al-Noor Academy',name:'Zahid Mahmood',months:[50,51.7,53.8,59.1,56.3,61.4],obsAvg:55.4,trend:'Improving',cats:[null,91.6,49.2,45.1]},
+  {school:'Greenwood Public School',name:'Wali Saira',months:[64.1,63.5,62.2,60.6,56.4,56.6],obsAvg:60.6,trend:'Declining',cats:[55.7,89.5,null,48.1]},
+  {school:'Iqra Education Centre',name:'Zahid Sheikh',months:[47.3,53.9,54.8,45.4,52.3,46.8],obsAvg:50.1,trend:'Steady',cats:[78.2,68.4,88.3,86.7]},
+  {school:'City Grammar School',name:'Aamir Rafiq',months:[68.8,65.4,64.6,64.4,61.3,60.9],obsAvg:64.2,trend:'Declining',cats:[78.6,48.1,81,93.6]},
+  {school:'Al-Noor Academy',name:'Vaqar Gondal',months:[68,65.8,61.4,58.8,null,68],obsAvg:64.4,trend:'Steady',cats:[90.1,48.5,73.6,54.8]},
+  {school:'Falcon Academy',name:'Hassan Farhan',months:[50,46.9,44.4,null,46.9,42.2],obsAvg:46.1,trend:'Declining',cats:[58.5,88.5,52.7,88.8]},
+  {school:'Horizon Model School',name:'Latif Habib',months:[null,57,46.7,53.3,53,53.6],obsAvg:52.7,trend:'Steady',cats:[57,76.9,48.9,51]},
+  {school:'Iqra Education Centre',name:'Wahid Bukhari',months:[73,null,68.2,66.1,71,null],obsAvg:69.6,trend:'Declining',cats:[56,49.9,47.4,54.3]},
+  {school:'Horizon Model School',name:'Rizwan Butt',months:[null,78.8,76.4,77.7,82.3,90.2],obsAvg:81.1,trend:'Improving',cats:[84.9,null,94.4,69.2]},
+  {school:'Lighthouse Academy',name:'Asif Wali',months:[70,77.6,79,81.3,null,77.7],obsAvg:77.1,trend:'Improving',cats:[47.2,null,null,74.6]},
+  {school:'Lighthouse Academy',name:'Lubna Janjua',months:[72.3,62.4,70.8,72.2,67.5,67.1],obsAvg:68.7,trend:'Steady',cats:[54.2,65.9,null,79.1]},
+  {school:'Al-Noor Academy',name:'Yusra Janjua',months:[63,64.1,65.9,69.3,null,75.5],obsAvg:67.6,trend:'Improving',cats:[93.5,null,64.6,57.7]},
+  {school:'Al-Noor Academy',name:'Faizan Javed',months:[null,58.8,62.9,66.4,73.5,69.2],obsAvg:66.2,trend:'Improving',cats:[76.2,66.4,50.3,86.4]},
+  {school:'Evergreen Institute',name:'Danish Gilani',months:[null,59.8,57.8,64.9,61.7,69.2],obsAvg:62.7,trend:'Improving',cats:[69.9,60.2,63.2,74.9]},
+  {school:'Lighthouse Academy',name:'Rashid Ali',months:[null,61.9,60.1,64.6,64.2,66],obsAvg:63.4,trend:'Improving',cats:[86.1,94.9,72.1,49.4]},
+  {school:'Horizon Model School',name:'Rabia Sattar',months:[74.3,77.6,82.1,80.9,81,89.2],obsAvg:80.9,trend:'Improving',cats:[79.1,78.1,52.5,48.1]},
+  {school:'Lighthouse Academy',name:'Rabia Hashmi',months:[66.1,67.1,65.8,58.2,60.9,54.7],obsAvg:62.1,trend:'Declining',cats:[null,68.1,69,84.8]},
+  {school:'City Grammar School',name:'Usman Yousaf',months:[75.5,77.4,74.6,71.8,null,74.2],obsAvg:74.7,trend:'Steady',cats:[65,93.4,49.5,60.7]},
+  {school:'Falcon Academy',name:'Bushra Zafar',months:[58.8,64.1,null,70.1,70.6,77.9],obsAvg:68.3,trend:'Improving',cats:[null,71.7,66.4,67.8]},
+  {school:'Falcon Academy',name:'Ghazala Hashmi',months:[64.1,63.7,69.5,71.2,79.5,78.1],obsAvg:71,trend:'Improving',cats:[82.4,90.1,75,84.7]},
+  {school:'Knowledge Valley School',name:'Zara Dogar',months:[56.6,54.8,57.5,54.1,62.2,55.9],obsAvg:56.9,trend:'Steady',cats:[null,60.8,69.5,81.5]},
+  {school:'Evergreen Institute',name:'Irfan Tariq',months:[53.4,50.4,53,51.2,53.2,57.3],obsAvg:53.1,trend:'Steady',cats:[94.5,45.2,94.4,51.5]},
+  {school:'Daanish Public School',name:'Danish Hashmi',months:[67.7,67.2,67.6,75.7,70.6,74.7],obsAvg:70.6,trend:'Improving',cats:[50.3,67.5,77.3,null]},
+  {school:'Knowledge Valley School',name:'Malik Owais',months:[null,51.4,46.7,43.3,46.9,38.8],obsAvg:45.4,trend:'Declining',cats:[null,79.6,84.1,84.3]}
+];
+
+const MONTH_SUBJECTS = {
+  "Al-Noor Academy|Faizan Javed": [null,["English"],["English"],["English"],["English"],["English"]],
+  "Al-Noor Academy|Faizan Zafar": [null,["Art"],["Art"],["Art"],null,["Art"]],
+  "Al-Noor Academy|Fatima Shahid": [null,["English"],["English"],null,["English"],["English"]],
+  "Al-Noor Academy|Hassan Butt": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Al-Noor Academy|Hina Mirza": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],null,["Urdu"]],
+  "Al-Noor Academy|Imran Hussain": [["English","Mathematics"],["English","Mathematics","P.E."],["English","Mathematics","P.E."],["English","Mathematics","P.E."],["English","Mathematics","P.E."],["English","Mathematics","P.E."]],
+  "Al-Noor Academy|Naila Mehmood": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Al-Noor Academy|Owais Baig": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],null,["Social Studies"]],
+  "Al-Noor Academy|Shazia Nasir": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],null],
+  "Al-Noor Academy|Vaqar Gondal": [["P.E."],["P.E."],["P.E."],["P.E."],null,["P.E."]],
+  "Al-Noor Academy|Yusra Dogar": [["P.E.","Science"],["P.E.","Science"],["Science"],["Science"],["P.E.","Science"],["P.E.","Science"]],
+  "Al-Noor Academy|Yusra Janjua": [["English"],["English"],["English"],["English"],null,["English"]],
+  "Al-Noor Academy|Zahid Mahmood": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Bright Future School|Hamid Yousaf": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "Bright Future School|Jaweria Rauf": [["English","P.E."],["English","P.E."],["English","P.E."],["English","P.E."],["English","P.E."],["English","P.E."]],
+  "Bright Future School|Omar Riaz": [["Art"],null,["Art"],null,["Art"],["Art"]],
+  "Bright Future School|Rubina Ali": [null,["Science"],null,["Science"],["Science"],["Science"]],
+  "Bright Future School|Sadia Baig": [["Mathematics"],["Mathematics"],["Mathematics"],null,["Mathematics"],["Mathematics"]],
+  "Bright Future School|Saira Kashmiri": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Bright Future School|Wahid Qureshi": [["P.E."],["P.E."],["P.E."],null,["P.E."],["P.E."]],
+  "City Grammar School|Aamir Rafiq": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "City Grammar School|Asif Chaudhry": [["P.E."],["P.E."],["P.E."],["P.E."],["P.E."],["P.E."]],
+  "City Grammar School|Asif Siddiqui": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "City Grammar School|Bushra Anwar": [null,["English"],["English"],null,["English"],null],
+  "City Grammar School|Bushra Sajid": [["P.E."],["P.E."],null,["P.E."],["P.E."],["P.E."]],
+  "City Grammar School|Erum Habib": [["Art"],null,["Art"],null,["Art"],["Art"]],
+  "City Grammar School|Kiran Chaudhry": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "City Grammar School|Mariam Habib": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "City Grammar School|Naila Gilani": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "City Grammar School|Quratulain Javed": [null,null,["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "City Grammar School|Samina Yousaf": [["Social Studies"],["Social Studies"],null,null,["Social Studies"],["Social Studies"]],
+  "City Grammar School|Shazia Butt": [["P.E."],["P.E."],null,["P.E."],null,["P.E."]],
+  "City Grammar School|Shazia Dogar": [["IT"],["IT"],null,["IT"],["IT"],["IT"]],
+  "City Grammar School|Shazia Nasir": [["Science","Social Studies"],["Science","Social Studies"],["Science","Social Studies"],["Science","Social Studies"],["Science","Social Studies"],["Science","Social Studies"]],
+  "City Grammar School|Usman Yousaf": [["English"],["English"],["English"],["English"],null,["English"]],
+  "City Grammar School|Uzma Malik": [["Mathematics"],["Mathematics"],null,["Mathematics"],["Mathematics"],["Mathematics"]],
+  "City Grammar School|Vaqar Bajwa": [["P.E."],["P.E."],["P.E."],["P.E."],["P.E."],["P.E."]],
+  "City Grammar School|Zahid Janjua": [["Urdu"],null,["Urdu"],["Urdu"],["Urdu"],null],
+  "City Grammar School|Zahid Malik": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Daanish Public School|Amna Anwar": [["Art"],null,["Art"],["Art"],null,["Art"]],
+  "Daanish Public School|Danish Hashmi": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Daanish Public School|Nadia Gondal": [["Art","Mathematics","P.E."],["Art","Mathematics","P.E."],["Art","Mathematics","P.E."],["Art","Mathematics","P.E."],["Art","P.E."],["Art","P.E."]],
+  "Evergreen Institute|Danish Gilani": [null,["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Evergreen Institute|Erum Habib": [["Science"],["Science"],null,["Science"],["Science"],["Science"]],
+  "Evergreen Institute|Erum Rashid": [["Art"],null,["Art"],["Art"],["Art"],["Art"]],
+  "Evergreen Institute|Faizan Zafar": [["P.E."],["P.E."],["P.E."],null,["P.E."],["P.E."]],
+  "Evergreen Institute|Imran Ali": [["Mathematics"],null,["Mathematics"],["Mathematics"],null,["Mathematics"]],
+  "Evergreen Institute|Irfan Tariq": [["P.E."],["P.E."],["P.E."],["P.E."],["P.E."],["P.E."]],
+  "Evergreen Institute|Nadia Habib": [["Art"],null,["Art"],["Art"],["Art"],["Art"]],
+  "Evergreen Institute|Quratulain Rauf": [["IT","P.E."],["IT","P.E."],["IT","P.E."],["IT","P.E."],["IT","P.E."],["IT","P.E."]],
+  "Evergreen Institute|Rashid Iqbal": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Evergreen Institute|Saira Malik": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Falcon Academy|Ahsan Riaz": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Falcon Academy|Bushra Zafar": [["English"],["English"],null,["English"],["English"],["English"]],
+  "Falcon Academy|Ghazala Hashmi": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "Falcon Academy|Hassan Farhan": [["Mathematics"],["Mathematics"],["Mathematics"],null,["Mathematics"],["Mathematics"]],
+  "Falcon Academy|Hina Dogar": [["IT"],["IT"],["IT"],null,["IT"],["IT"]],
+  "Falcon Academy|Imran Zafar": [["P.E."],["P.E."],["P.E."],["P.E."],["P.E."],["P.E."]],
+  "Falcon Academy|Irfan Sheikh": [["Mathematics"],null,["Mathematics"],["Mathematics"],null,["Mathematics"]],
+  "Falcon Academy|Mariam Ali": [["IT"],["IT"],["IT"],null,["IT"],["IT"]],
+  "Falcon Academy|Naila Siddiqui": [["IT"],null,["IT"],["IT"],["IT"],["IT"]],
+  "Falcon Academy|Owais Malik": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Falcon Academy|Owais Sheikh": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Falcon Academy|Parveen Hayat": [["IT"],["IT"],null,["IT"],["IT"],["IT"]],
+  "Falcon Academy|Pervaiz Farhan": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Falcon Academy|Pervaiz Tariq": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Falcon Academy|Rubina Raza": [["Science"],["Science"],["Science"],["Science"],["Science"],null],
+  "Falcon Academy|Yasmeen Saleem": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Falcon Academy|Yusra Ali": [["Art"],["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "Falcon Academy|Yusra Dogar": [["Science"],["Science"],["Science"],null,["Science"],["Science"]],
+  "Falcon Academy|Yusra Farhan": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "Falcon Academy|Zahid Noon": [["IT"],["IT"],["IT"],["IT"],null,["IT"]],
+  "Falcon Academy|Zahid Yousaf": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Falcon Academy|Zara Bhatti": [["English"],["English"],["English"],["English"],["English"],null],
+  "Greenwood Public School|Benazir Chaudhry": [["English"],["English"],["English"],null,["English"],["English"]],
+  "Greenwood Public School|Saira Malik": [["Science","Social Studies"],["Science","Social Studies"],["Science"],["Social Studies"],["Science"],["Science","Social Studies"]],
+  "Greenwood Public School|Wahid Rashid": [["Urdu"],["Urdu"],null,["Urdu"],["Urdu"],["Urdu"]],
+  "Greenwood Public School|Wali Saira": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Horizon Model School|Ahsan Ali": [["IT"],["IT"],null,["IT"],["IT"],["IT"]],
+  "Horizon Model School|Benazir Chaudhry": [["Urdu"],["Urdu"],["Urdu"],null,["Urdu"],["Urdu"]],
+  "Horizon Model School|Benazir Janjua": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Horizon Model School|Bushra Aziz": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Horizon Model School|Hamid Cheema": [["P.E."],["P.E."],null,["P.E."],["P.E."],["P.E."]],
+  "Horizon Model School|Jaweria Farooq": [["IT"],["IT"],null,["IT"],["IT"],["IT"]],
+  "Horizon Model School|Jaweria Zafar": [["Art"],["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "Horizon Model School|Latif Habib": [null,["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Horizon Model School|Lubna Bukhari": [["English"],["English"],null,["English"],["English"],["English"]],
+  "Horizon Model School|Pervaiz Rashid": [["P.E."],["P.E."],["P.E."],null,null,["P.E."]],
+  "Horizon Model School|Rabia Sattar": [["IT"],["IT"],["IT"],["IT"],["IT"],["IT"]],
+  "Horizon Model School|Rizwan Butt": [null,["IT"],["IT"],["IT"],["IT"],["IT"]],
+  "Horizon Model School|Sadia Baig": [["P.E."],["P.E."],["P.E."],["P.E."],["P.E."],["P.E."]],
+  "Horizon Model School|Shazia Aziz": [["English"],["English"],["English"],["English"],null,["English"]],
+  "Horizon Model School|Shazia Nasir": [["P.E."],["P.E."],["P.E."],["P.E."],["P.E."],["P.E."]],
+  "Horizon Model School|Usman Bhatti": [["IT"],["IT"],["IT"],["IT"],null,["IT"]],
+  "Iqra Education Centre|Kamran Saleem": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Iqra Education Centre|Rabia Baig": [null,["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "Iqra Education Centre|Rubina Noon": [["Art"],["Art"],["Art"],["Art"],null,null],
+  "Iqra Education Centre|Samina Anwar": [["English"],["English"],null,["English"],["English"],null],
+  "Iqra Education Centre|Shahzad Baig": [["Art","Science"],["Art","Science"],["Science"],["Science"],["Art","Science"],["Art","Science"]],
+  "Iqra Education Centre|Wahid Bukhari": [["Art"],null,["Art"],["Art"],["Art"],null],
+  "Iqra Education Centre|Zahid Sheikh": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Iqra Education Centre|Zainab Sheikh": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Junior Scholars Academy|Ahsan Gondal": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Junior Scholars Academy|Ahsan Rauf": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Junior Scholars Academy|Benazir Rashid": [["IT"],["IT"],null,null,["IT"],["IT"]],
+  "Junior Scholars Academy|Bushra Farhan": [["IT"],["IT"],["IT"],["IT"],["IT"],["IT"]],
+  "Junior Scholars Academy|Erum Habib": [["English","Social Studies"],["Social Studies"],["English"],["English","Social Studies"],["English","Social Studies"],["English","Social Studies"]],
+  "Junior Scholars Academy|Faizan Rauf": [["Social Studies"],["Social Studies"],["Social Studies"],null,null,["Social Studies"]],
+  "Junior Scholars Academy|Faizan Zafar": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Junior Scholars Academy|Ghazala Hashmi": [["Art"],["Art"],null,["Art"],["Art"],["Art"]],
+  "Junior Scholars Academy|Habib Danish": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Junior Scholars Academy|Hamid Cheema": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "Junior Scholars Academy|Kamran Aslam": [null,["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Junior Scholars Academy|Kamran Shahid": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Junior Scholars Academy|Latif Sajid": [["Art"],["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "Junior Scholars Academy|Mehwish Kashmiri": [["Mathematics"],null,["Mathematics"],null,["Mathematics"],["Mathematics"]],
+  "Junior Scholars Academy|Omar Sattar": [["P.E."],["Urdu"],["P.E.","Urdu"],["P.E.","Urdu"],["P.E.","Urdu"],["P.E."]],
+  "Junior Scholars Academy|Qasim Tariq": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Junior Scholars Academy|Quratulain Akhtar": [["Mathematics"],["Mathematics"],null,["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Junior Scholars Academy|Shazia Nasir": [["P.E."],null,["P.E."],["P.E."],["P.E."],["P.E."]],
+  "Junior Scholars Academy|Usman Gondal": [null,["English"],["English"],["English"],["English"],null],
+  "Knowledge Valley School|Asif Rafiq": [["English"],["English"],["English"],["English"],["English"],null],
+  "Knowledge Valley School|Malik Owais": [null,["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Knowledge Valley School|Maryam Rashid": [["Art"],["Art","Urdu"],["Art","Urdu"],["Art","Urdu"],["Art","Urdu"],["Urdu"]],
+  "Knowledge Valley School|Owais Malik": [["English"],["English"],["English"],["English"],null,["English"]],
+  "Knowledge Valley School|Zara Dogar": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Lighthouse Academy|Ahsan Kashmiri": [null,["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Lighthouse Academy|Asif Wali": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],null,["Urdu"]],
+  "Lighthouse Academy|Bushra Javed": [["Art","Mathematics"],["Art","Mathematics"],["Art"],["Art","Mathematics"],null,["Art","Mathematics"]],
+  "Lighthouse Academy|Bushra Qureshi": [["Science"],["Science"],["Science"],["Science"],null,null],
+  "Lighthouse Academy|Ghazala Nasir": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Lighthouse Academy|Latif Akhtar": [["IT"],["IT"],["IT"],["IT"],["IT"],["IT"]],
+  "Lighthouse Academy|Latif Rauf": [["Art"],null,["Art"],["Art"],["Art"],["Art"]],
+  "Lighthouse Academy|Lubna Janjua": [["Art"],["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "Lighthouse Academy|Naveed Ali": [["Science"],["Science"],["Science"],null,["Science"],["Science"]],
+  "Lighthouse Academy|Rabia Hashmi": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Lighthouse Academy|Rashid Ali": [null,["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Lighthouse Academy|Urooj Sheikh": [["IT"],["IT"],["IT"],["IT"],["IT"],["IT"]],
+  "Lighthouse Academy|Zahid Raza": [["P.E."],null,["P.E."],["P.E."],["P.E."],["P.E."]],
+  "Minhaj Public School|Asif Iqbal": [["IT","P.E."],["IT","P.E."],["IT","P.E."],["IT"],["IT"],["IT","P.E."]],
+  "Minhaj Public School|Bukhari Layla": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "Minhaj Public School|Erum Habib": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "Minhaj Public School|Fatima Mehmood": [null,["English"],null,null,["English"],["English"]],
+  "Minhaj Public School|Ghazala Zafar": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "Minhaj Public School|Latif Akhtar": [["IT"],["IT"],["IT"],["IT"],["IT"],["IT"]],
+  "Minhaj Public School|Shahzad Saleem": [["Social Studies"],["Social Studies"],null,["Social Studies"],["Social Studies"],["Social Studies"]],
+  "Minhaj Public School|Shazia Nasir": [["Science"],["Science"],["Science"],null,["Science"],["Science"]],
+  "Minhaj Public School|Tariq Mehmood": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "New Horizon School|Akhtar Shahzad": [["IT"],["IT"],["IT"],["IT"],null,["IT"]],
+  "New Horizon School|Ghazala Gilani": [null,["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "New Horizon School|Jaweria Sajid": [["Science"],null,["P.E."],["P.E."],["P.E.","Science"],["P.E.","Science"]],
+  "New Horizon School|Lubna Ali": [null,["English"],null,["English"],["English"],["English"]],
+  "New Horizon School|Noman Malik": [["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"],["Mathematics"]],
+  "New Horizon School|Pervaiz Yousaf": [["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"],["Social Studies"]],
+  "New Horizon School|Quratulain Bhatti": [["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+  "New Horizon School|Rabia Tariq": [["Science"],null,["Science"],["Science"],["Science"],["Science"]],
+  "New Horizon School|Riaz Uzma": [["Science"],null,null,null,["Science"],["Science"]],
+  "New Horizon School|Rizwan Shahid": [["Art"],["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "New Horizon School|Rizwan Yousaf": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "New Horizon School|Sadia Baig": [["Art"],["Art"],["Art"],["Art"],["Art"],["Art"]],
+  "New Horizon School|Saira Malik": [["Science"],["Science"],["Science"],["Science"],["Science"],["Science"]],
+  "New Horizon School|Sajid Jaweria": [["Social Studies"],["Social Studies"],null,["Social Studies"],["Social Studies"],null],
+  "New Horizon School|Tariq Khan": [["P.E."],["P.E."],["P.E."],["P.E."],["P.E."],["P.E."]],
+  "New Horizon School|Usman Noon": [["IT"],["IT"],null,["IT"],null,["IT"]],
+  "New Horizon School|Yasmeen Nasir": [["English"],["English"],["English"],["English"],["English"],["English"]],
+  "New Horizon School|Zara Kashmiri": [["Urdu"],null,["Urdu"],["Urdu"],["Urdu"],["Urdu"]],
+};
+const CPD_SUBJECT_DATA = {
+  'Junior Scholars Academy|habib danish|Mathematics':        'Foundational Teaching Skills',
+  'Junior Scholars Academy|ahsan rauf|Science':              'Foundational Teaching Skills',
+  'Junior Scholars Academy|latif sajid|Art':                 'Leadership & Mentoring',
+  'Junior Scholars Academy|kamran aslam|Urdu':               'Advanced Pedagogy',
+  'Junior Scholars Academy|faizan rauf|Social Studies':      'Leadership & Mentoring',
+  'Junior Scholars Academy|hamid cheema|English':            'Advanced Pedagogy',
+  'Junior Scholars Academy|shazia nasir|P.E.':               'Leadership & Mentoring',
+  'Junior Scholars Academy|qasim tariq|Mathematics':         'Differentiated Instruction',
+  'Junior Scholars Academy|faizan zafar|Mathematics':        'Advanced Pedagogy',
+  'Junior Scholars Academy|erum habib|Social Studies':       'Leadership & Mentoring',
+  'Junior Scholars Academy|erum habib|English':              'Advanced Pedagogy',
+  'Junior Scholars Academy|ahsan gondal|Social Studies':     'Advanced Pedagogy',
+  'Junior Scholars Academy|kamran shahid|Urdu':              'Differentiated Instruction',
+  'Junior Scholars Academy|mehwish kashmiri|Mathematics':    'Advanced Pedagogy',
+  'Junior Scholars Academy|omar sattar|Urdu':                'Foundational Teaching Skills',
+  'Lighthouse Academy|zahid raza|P.E.':                      'Differentiated Instruction',
+  'Lighthouse Academy|latif rauf|Art':                       'Advanced Pedagogy',
+  'Lighthouse Academy|ghazala nasir|Mathematics':            'Advanced Pedagogy',
+  'Lighthouse Academy|latif akhtar|IT':                      'Foundational Teaching Skills',
+  'Lighthouse Academy|naveed ali|Science':                   'Leadership & Mentoring',
+  'Lighthouse Academy|bushra javed|Art':                     'Advanced Pedagogy',
+  'Lighthouse Academy|bushra javed|Mathematics':             'Differentiated Instruction',
+  'Lighthouse Academy|bushra qureshi|Science':               'Advanced Pedagogy',
+  'Lighthouse Academy|rashid ali|Social Studies':            'Leadership & Mentoring',
+  'Daanish Public School|nadia gondal|Mathematics':          'Leadership & Mentoring',
+  'Daanish Public School|nadia gondal|Art':                  'Foundational Teaching Skills',
+  'Daanish Public School|nadia gondal|P.E.':                 'Advanced Pedagogy',
+  'Daanish Public School|amna anwar|Art':                    'Leadership & Mentoring',
+  'Minhaj Public School|erum habib|Urdu':                    'Differentiated Instruction',
+  'Minhaj Public School|shazia nasir|Science':               'Differentiated Instruction',
+  'Minhaj Public School|ghazala zafar|Mathematics':          'Advanced Pedagogy',
+  'Minhaj Public School|shahzad saleem|Social Studies':      'Leadership & Mentoring',
+  'Minhaj Public School|asif iqbal|IT':                      'Differentiated Instruction',
+  'Minhaj Public School|asif iqbal|P.E.':                    'Differentiated Instruction',
+  'Minhaj Public School|latif akhtar|IT':                    'Leadership & Mentoring',
+  'Al-Noor Academy|owais baig|Social Studies':               'Differentiated Instruction',
+  'Al-Noor Academy|imran hussain|Mathematics':               'Advanced Pedagogy',
+  'Al-Noor Academy|imran hussain|English':                   'Leadership & Mentoring',
+  'Al-Noor Academy|imran hussain|P.E.':                      'Advanced Pedagogy',
+  'Al-Noor Academy|faizan zafar|Art':                        'Differentiated Instruction',
+  'Al-Noor Academy|yusra dogar|Science':                     'Foundational Teaching Skills',
+  'Al-Noor Academy|yusra dogar|P.E.':                        'Differentiated Instruction',
+  'Al-Noor Academy|hassan butt|Social Studies':              'Advanced Pedagogy',
+  'Al-Noor Academy|naila mehmood|Science':                   'Differentiated Instruction',
+  'Al-Noor Academy|fatima shahid|English':                   'Advanced Pedagogy',
+  'Al-Noor Academy|vaqar gondal|P.E.':                       'Advanced Pedagogy',
+  'Al-Noor Academy|yusra janjua|English':                    'Advanced Pedagogy',
+  'Al-Noor Academy|faizan javed|English':                    'Advanced Pedagogy',
+  'Bright Future School|hamid yousaf|English':               'Advanced Pedagogy',
+  'Bright Future School|sadia baig|Mathematics':             'Foundational Teaching Skills',
+  'Bright Future School|jaweria rauf|P.E.':                  'Advanced Pedagogy',
+  'Bright Future School|wahid qureshi|P.E.':                 'Differentiated Instruction',
+  'Falcon Academy|irfan sheikh|Mathematics':                 'Leadership & Mentoring',
+  'Falcon Academy|naila siddiqui|IT':                        'Differentiated Instruction',
+  'Falcon Academy|pervaiz tariq|Social Studies':             'Differentiated Instruction',
+  'Falcon Academy|yusra farhan|English':                     'Foundational Teaching Skills',
+  'Falcon Academy|owais sheikh|Urdu':                        'Leadership & Mentoring',
+  'Falcon Academy|yusra dogar|Science':                      'Leadership & Mentoring',
+  'Falcon Academy|imran zafar|P.E.':                         'Foundational Teaching Skills',
+  'Falcon Academy|zara bhatti|English':                      'Differentiated Instruction',
+  'Falcon Academy|hina dogar|IT':                            'Advanced Pedagogy',
+  'Falcon Academy|owais malik|Social Studies':               'Leadership & Mentoring',
+  'Falcon Academy|pervaiz farhan|Urdu':                      'Advanced Pedagogy',
+  'Falcon Academy|zahid noon|IT':                            'Leadership & Mentoring',
+  'Falcon Academy|ahsan riaz|Urdu':                          'Differentiated Instruction',
+  'Falcon Academy|parveen hayat|IT':                         'Foundational Teaching Skills',
+  'Falcon Academy|rubina raza|Science':                      'Differentiated Instruction',
+  'Falcon Academy|zahid yousaf|Science':                     'Differentiated Instruction',
+  'Falcon Academy|yasmeen saleem|Science':                   'Advanced Pedagogy',
+  'Falcon Academy|bushra zafar|English':                     'Advanced Pedagogy',
+  'Falcon Academy|ghazala hashmi|English':                   'Leadership & Mentoring',
+  'Falcon Academy|hassan farhan|Mathematics':                'Differentiated Instruction',
+  'Falcon Academy|mariam ali|IT':                            'Advanced Pedagogy',
+  'Iqra Education Centre|kamran saleem|Mathematics':         'Differentiated Instruction',
+  'Iqra Education Centre|shahzad baig|Science':              'Advanced Pedagogy',
+  'Iqra Education Centre|rabia baig|Art':                    'Advanced Pedagogy',
+  'Iqra Education Centre|rubina noon|Art':                   'Leadership & Mentoring',
+  'Iqra Education Centre|zainab sheikh|Social Studies':      'Differentiated Instruction',
+  'Iqra Education Centre|samina anwar|English':              'Differentiated Instruction',
+  'Horizon Model School|lubna bukhari|English':              'Differentiated Instruction',
+  'Horizon Model School|sadia baig|P.E.':                    'Foundational Teaching Skills',
+  'Horizon Model School|shazia nasir|P.E.':                  'Advanced Pedagogy',
+  'Horizon Model School|jaweria farooq|IT':                  'Advanced Pedagogy',
+  'Horizon Model School|shazia aziz|English':                'Differentiated Instruction',
+  'Horizon Model School|bushra aziz|Social Studies':         'Advanced Pedagogy',
+  'Horizon Model School|pervaiz rashid|P.E.':                'Differentiated Instruction',
+  'Horizon Model School|benazir janjua|Urdu':                'Leadership & Mentoring',
+  'Horizon Model School|benazir chaudhry|Urdu':              'Advanced Pedagogy',
+  'Horizon Model School|ahsan ali|IT':                       'Differentiated Instruction',
+  'Horizon Model School|hamid cheema|P.E.':                  'Leadership & Mentoring',
+  'Horizon Model School|latif habib|Mathematics':            'Foundational Teaching Skills',
+  'Horizon Model School|rizwan butt|IT':                     'Differentiated Instruction',
+  'Horizon Model School|rabia sattar|IT':                    'Advanced Pedagogy',
+  'Evergreen Institute|erum habib|Science':                  'Leadership & Mentoring',
+  'Evergreen Institute|quratulain rauf|IT':                  'Differentiated Instruction',
+  'Evergreen Institute|nadia habib|Art':                     'Differentiated Instruction',
+  'Evergreen Institute|imran ali|Mathematics':               'Advanced Pedagogy',
+  'Evergreen Institute|erum rashid|Art':                     'Leadership & Mentoring',
+  'Evergreen Institute|saira malik|Mathematics':             'Advanced Pedagogy',
+  'Evergreen Institute|danish gilani|Mathematics':           'Advanced Pedagogy',
+  'Knowledge Valley School|maryam rashid|Art':               'Foundational Teaching Skills',
+  'Knowledge Valley School|maryam rashid|Urdu':              'Leadership & Mentoring',
+  'Knowledge Valley School|asif rafiq|English':              'Advanced Pedagogy',
+  'Knowledge Valley School|malik owais|Mathematics':         'Foundational Teaching Skills',
+  'Greenwood Public School|saira malik|Science':             'Leadership & Mentoring',
+  'Greenwood Public School|wahid rashid|Urdu':               'Foundational Teaching Skills',
+  'New Horizon School|rizwan shahid|Art':                    'Advanced Pedagogy',
+  'New Horizon School|pervaiz yousaf|Social Studies':        'Advanced Pedagogy',
+  'New Horizon School|zara kashmiri|Urdu':                   'Leadership & Mentoring',
+  'New Horizon School|akhtar shahzad|IT':                    'Advanced Pedagogy',
+  'New Horizon School|jaweria sajid|Science':                'Leadership & Mentoring',
+  'New Horizon School|jaweria sajid|P.E.':                   'Differentiated Instruction',
+  'New Horizon School|yasmeen nasir|English':                'Differentiated Instruction',
+  'New Horizon School|rabia tariq|Science':                  'Leadership & Mentoring',
+  'New Horizon School|ghazala gilani|Art':                   'Advanced Pedagogy',
+  'New Horizon School|saira malik|Science':                  'Advanced Pedagogy',
+  'New Horizon School|lubna ali|English':                    'Leadership & Mentoring',
+  'New Horizon School|usman noon|IT':                        'Leadership & Mentoring',
+  'New Horizon School|sajid jaweria|Social Studies':         'Advanced Pedagogy',
+  'City Grammar School|uzma malik|Mathematics':              'Differentiated Instruction',
+  'City Grammar School|shazia nasir|Science':                'Differentiated Instruction',
+  'City Grammar School|shazia nasir|Social Studies':         'Advanced Pedagogy',
+  'City Grammar School|bushra sajid|P.E.':                   'Advanced Pedagogy',
+  'City Grammar School|erum habib|Art':                      'Leadership & Mentoring',
+  'City Grammar School|shazia butt|P.E.':                    'Advanced Pedagogy',
+  'City Grammar School|mariam habib|Science':                'Leadership & Mentoring',
+  'City Grammar School|zahid janjua|Urdu':                   'Leadership & Mentoring',
+  'City Grammar School|kiran chaudhry|English':              'Differentiated Instruction',
+  'City Grammar School|bushra anwar|English':                'Advanced Pedagogy',
+  'City Grammar School|asif siddiqui|Mathematics':           'Foundational Teaching Skills',
+  'City Grammar School|quratulain javed|Urdu':               'Differentiated Instruction',
+  'City Grammar School|aamir rafiq|English':                 'Differentiated Instruction',
+};
+const CPD_DATA = {
+  'Junior Scholars Academy|omar sattar':        'Foundational Teaching Skills',
+  'Junior Scholars Academy|habib danish':        'Foundational Teaching Skills',
+  'Junior Scholars Academy|ahsan rauf':          'Foundational Teaching Skills',
+  'Junior Scholars Academy|latif sajid':         'Leadership & Mentoring',
+  'Junior Scholars Academy|kamran aslam':        'Advanced Pedagogy',
+  'Junior Scholars Academy|faizan rauf':         'Leadership & Mentoring',
+  'Junior Scholars Academy|hamid cheema':        'Advanced Pedagogy',
+  'Junior Scholars Academy|shazia nasir':        'Leadership & Mentoring',
+  'Junior Scholars Academy|qasim tariq':         'Differentiated Instruction',
+  'Junior Scholars Academy|faizan zafar':        'Advanced Pedagogy',
+  'Junior Scholars Academy|erum habib':          'Advanced Pedagogy',
+  'Junior Scholars Academy|ahsan gondal':        'Advanced Pedagogy',
+  'Junior Scholars Academy|kamran shahid':       'Differentiated Instruction',
+  'Junior Scholars Academy|usman gondal':        'Foundational Teaching Skills',
+  'Junior Scholars Academy|mehwish kashmiri':    'Advanced Pedagogy',
+  'Lighthouse Academy|zahid raza':               'Differentiated Instruction',
+  'Lighthouse Academy|latif rauf':               'Advanced Pedagogy',
+  'Lighthouse Academy|ghazala nasir':            'Advanced Pedagogy',
+  'Lighthouse Academy|latif akhtar':             'Foundational Teaching Skills',
+  'Lighthouse Academy|naveed ali':               'Leadership & Mentoring',
+  'Lighthouse Academy|bushra javed':             'Differentiated Instruction',
+  'Lighthouse Academy|bushra qureshi':           'Advanced Pedagogy',
+  'Lighthouse Academy|rashid ali':               'Leadership & Mentoring',
+  'Daanish Public School|nadia gondal':          'Advanced Pedagogy',
+  'Daanish Public School|amna anwar':            'Leadership & Mentoring',
+  'Minhaj Public School|erum habib':             'Differentiated Instruction',
+  'Minhaj Public School|shazia nasir':           'Differentiated Instruction',
+  'Minhaj Public School|ghazala zafar':          'Advanced Pedagogy',
+  'Minhaj Public School|shahzad saleem':         'Leadership & Mentoring',
+  'Minhaj Public School|asif iqbal':             'Differentiated Instruction',
+  'Minhaj Public School|latif akhtar':           'Leadership & Mentoring',
+  'Al-Noor Academy|owais baig':                  'Differentiated Instruction',
+  'Al-Noor Academy|imran hussain':               'Advanced Pedagogy',
+  'Al-Noor Academy|faizan zafar':                'Differentiated Instruction',
+  'Al-Noor Academy|yusra dogar':                 'Differentiated Instruction',
+  'Al-Noor Academy|hassan butt':                 'Advanced Pedagogy',
+  'Al-Noor Academy|naila mehmood':               'Differentiated Instruction',
+  'Al-Noor Academy|fatima shahid':               'Advanced Pedagogy',
+  'Al-Noor Academy|vaqar gondal':                'Advanced Pedagogy',
+  'Al-Noor Academy|yusra janjua':                'Advanced Pedagogy',
+  'Al-Noor Academy|faizan javed':                'Advanced Pedagogy',
+  'Bright Future School|hamid yousaf':           'Advanced Pedagogy',
+  'Bright Future School|sadia baig':             'Foundational Teaching Skills',
+  'Bright Future School|jaweria rauf':           'Advanced Pedagogy',
+  'Bright Future School|wahid qureshi':          'Differentiated Instruction',
+  'Falcon Academy|irfan sheikh':                 'Leadership & Mentoring',
+  'Falcon Academy|naila siddiqui':               'Differentiated Instruction',
+  'Falcon Academy|pervaiz tariq':                'Differentiated Instruction',
+  'Falcon Academy|yusra farhan':                 'Foundational Teaching Skills',
+  'Falcon Academy|owais sheikh':                 'Leadership & Mentoring',
+  'Falcon Academy|yusra dogar':                  'Leadership & Mentoring',
+  'Falcon Academy|imran zafar':                  'Foundational Teaching Skills',
+  'Falcon Academy|zara bhatti':                  'Differentiated Instruction',
+  'Falcon Academy|hina dogar':                   'Advanced Pedagogy',
+  'Falcon Academy|owais malik':                  'Leadership & Mentoring',
+  'Falcon Academy|pervaiz farhan':               'Advanced Pedagogy',
+  'Falcon Academy|mariam ali':                   'Advanced Pedagogy',
+  'Falcon Academy|zahid noon':                   'Leadership & Mentoring',
+  'Falcon Academy|ahsan riaz':                   'Differentiated Instruction',
+  'Falcon Academy|parveen hayat':                'Foundational Teaching Skills',
+  'Falcon Academy|rubina raza':                  'Differentiated Instruction',
+  'Falcon Academy|zahid yousaf':                 'Differentiated Instruction',
+  'Falcon Academy|yasmeen saleem':               'Advanced Pedagogy',
+  'Falcon Academy|bushra zafar':                 'Advanced Pedagogy',
+  'Falcon Academy|ghazala hashmi':               'Leadership & Mentoring',
+  'Falcon Academy|hassan farhan':                'Differentiated Instruction',
+  'Iqra Education Centre|kamran saleem':         'Differentiated Instruction',
+  'Iqra Education Centre|shahzad baig':          'Advanced Pedagogy',
+  'Iqra Education Centre|rabia baig':            'Advanced Pedagogy',
+  'Iqra Education Centre|rubina noon':           'Leadership & Mentoring',
+  'Iqra Education Centre|zainab sheikh':         'Differentiated Instruction',
+  'Iqra Education Centre|samina anwar':          'Differentiated Instruction',
+  'Horizon Model School|lubna bukhari':          'Differentiated Instruction',
+  'Horizon Model School|sadia baig':             'Foundational Teaching Skills',
+  'Horizon Model School|shazia nasir':           'Advanced Pedagogy',
+  'Horizon Model School|jaweria farooq':         'Advanced Pedagogy',
+  'Horizon Model School|shazia aziz':            'Differentiated Instruction',
+  'Horizon Model School|bushra aziz':            'Advanced Pedagogy',
+  'Horizon Model School|pervaiz rashid':         'Differentiated Instruction',
+  'Horizon Model School|benazir janjua':         'Leadership & Mentoring',
+  'Horizon Model School|benazir chaudhry':       'Advanced Pedagogy',
+  'Horizon Model School|ahsan ali':              'Differentiated Instruction',
+  'Horizon Model School|hamid cheema':           'Leadership & Mentoring',
+  'Horizon Model School|latif habib':            'Foundational Teaching Skills',
+  'Horizon Model School|rizwan butt':            'Differentiated Instruction',
+  'Evergreen Institute|erum habib':              'Leadership & Mentoring',
+  'Evergreen Institute|quratulain rauf':         'Differentiated Instruction',
+  'Evergreen Institute|nadia habib':             'Differentiated Instruction',
+  'Evergreen Institute|imran ali':               'Advanced Pedagogy',
+  'Evergreen Institute|erum rashid':             'Leadership & Mentoring',
+  'Evergreen Institute|saira malik':             'Advanced Pedagogy',
+  'Evergreen Institute|danish gilani':           'Advanced Pedagogy',
+  'Knowledge Valley School|maryam rashid':       'Leadership & Mentoring',
+  'Knowledge Valley School|asif rafiq':          'Advanced Pedagogy',
+  'Knowledge Valley School|malik owais':         'Foundational Teaching Skills',
+  'Greenwood Public School|saira malik':         'Leadership & Mentoring',
+  'Greenwood Public School|wahid rashid':        'Foundational Teaching Skills',
+  'New Horizon School|rizwan shahid':            'Advanced Pedagogy',
+  'New Horizon School|pervaiz yousaf':           'Advanced Pedagogy',
+  'New Horizon School|zara kashmiri':            'Leadership & Mentoring',
+  'New Horizon School|akhtar shahzad':           'Advanced Pedagogy',
+  'New Horizon School|jaweria sajid':            'Differentiated Instruction',
+  'New Horizon School|yasmeen nasir':            'Differentiated Instruction',
+  'New Horizon School|rabia tariq':              'Leadership & Mentoring',
+  'New Horizon School|ghazala gilani':           'Advanced Pedagogy',
+  'New Horizon School|saira malik':              'Advanced Pedagogy',
+  'New Horizon School|lubna ali':                'Leadership & Mentoring',
+  'New Horizon School|usman noon':               'Leadership & Mentoring',
+  'New Horizon School|sajid jaweria':            'Advanced Pedagogy',
+  'City Grammar School|uzma malik':              'Differentiated Instruction',
+  'City Grammar School|shazia nasir':            'Advanced Pedagogy',
+  'City Grammar School|bushra sajid':            'Advanced Pedagogy',
+  'City Grammar School|erum habib':              'Leadership & Mentoring',
+  'City Grammar School|shazia butt':             'Advanced Pedagogy',
+  'City Grammar School|mariam habib':            'Leadership & Mentoring',
+  'City Grammar School|zahid janjua':            'Leadership & Mentoring',
+  'City Grammar School|kiran chaudhry':          'Differentiated Instruction',
+  'City Grammar School|bushra anwar':            'Advanced Pedagogy',
+  'City Grammar School|asif siddiqui':           'Foundational Teaching Skills',
+  'City Grammar School|quratulain javed':        'Differentiated Instruction',
+  'City Grammar School|aamir rafiq':             'Differentiated Instruction',
+};
+/* ── Helpers ── */
+const mean = a => { const v=a.filter(x=>x!=null); return v.length ? v.reduce((s,x)=>s+x,0)/v.length : null; };
+const r1   = x => x!=null ? Math.round(x*10)/10 : null;
+const tClass = t => t==="Improving"?"up":t==="Declining"?"down":"steady";
+const tArrow = t => t==="Improving"?"↑":t==="Declining"?"↓":"→";
+DATA.forEach(d => d.catAvg = r1(mean(d.cats)));
+
+/* ── Share Report ── */
+function buildReportText(d) {
+  const monthLines = MONTHS.map((m,i)=>`${m}: ${d.months[i]!=null?d.months[i]+'%':'N/A'}`).join('\n');
+  const indLines = INDICATORS.map((name,i)=>`${name}: ${d.cats[i]!=null?d.cats[i]+'%':'N/A'}`).join('\n');
+  return `Observation Cycle Summary – ${d.name}\n`+
+         `${d.school} · Coach: ${COACHES[d.school]||''}\n\n`+
+         `Observation Average: ${d.obsAvg}%\n`+
+         `Trend: ${tArrow(d.trend)} ${d.trend}\n\n`+
+         `Monthly Scores (Sept–Feb):\n${monthLines}\n\n`+
+         `Indicator Breakdown (Latest):\n${indLines}`;
+}
+function toggleShareMenu(e) {
+  e.stopPropagation();
+  const m = document.getElementById('shareMenu');
+  if (m) m.hidden = !m.hidden;
+}
+document.addEventListener('click', () => {
+  const m = document.getElementById('shareMenu');
+  if (m) m.hidden = true;
+});
+function shareReport(channel) {
+  const d = DATA.find(r=>r.name===selectedTeacher);
+  if (!d) return;
+  const menu = document.getElementById('shareMenu');
+  if (menu) menu.hidden = true;
+  const text = buildReportText(d);
+  if (channel === 'email') {
+    const subject = `Observation Cycle Summary – ${d.name}`;
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+    window.open(gmailUrl, '_blank');
+  } else if (channel === 'whatsapp') {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
+}
+
+/* ── State ── */
+let activeSchool    = "";
+let selectedTeacher = null;
+let selectedVisitIdx = null;
+let currentUser     = null;
+let sessionSchools  = [];
+let searchQuery     = '';
+let sortBy          = 'name';
+let filterTrend     = 'all';
+let loginRole       = 'coach';
+const getSet = () => {
+  if (!currentUser) return [];
+  return !activeSchool ? DATA : DATA.filter(d=>d.school===activeSchool);
+};
+
+/* ── SVG line chart ── */
+function lineChart(series, labels, h=180) {
+  const W=500, H=h, pL=36, pR=12, pT=14, pB=26;
+  const iw=W-pL-pR, ih=H-pT-pB;
+  const allVals = series.flatMap(s=>s.values).filter(x=>x!=null);
+  const yMin = Math.floor(Math.min(...allVals)/10)*10;
+  const yMax  = Math.ceil( Math.max(...allVals)/10)*10 + 5;
+  const xp = i => pL + iw*i/(labels.length-1);
+  const yp = v => pT + ih - ih*(v-yMin)/(yMax-yMin);
+
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">`;
+  for (let v=yMin; v<=yMax; v+=10) {
+    const y=yp(v);
+    s += `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="#dceee0" stroke-width="1"/>`;
+    s += `<text x="${pL-5}" y="${y+4}" font-size="10" fill="#56695a" text-anchor="end">${v}</text>`;
+  }
+  series.forEach(({values,color,fill,secondary})=>{
+    const pts = values.map((v,i)=>v!=null?`${xp(i)},${yp(v)}`:null).filter(Boolean).join(' ');
+    if(fill) s += `<polygon points="${xp(0)},${pT+ih} ${pts} ${xp(labels.length-1)},${pT+ih}" fill="${fill}" opacity="0.35"/>`;
+    s += `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${secondary?1.5:2.2}" stroke-dasharray="${secondary?'5,3':''}" stroke-linejoin="round" stroke-linecap="round" opacity="${secondary?.7:1}"/>`;
+    if(!secondary) {
+      const nonNull = values.filter(x=>x!=null);
+      const minVal = nonNull.length ? Math.min(...nonNull) : null;
+      values.forEach((v,i)=>{
+        if(v==null) return;
+        const isMin = v===minVal;
+        const dc = isMin ? '#c62828' : color;
+        s += `<circle cx="${xp(i)}" cy="${yp(v)}" r="${isMin?5:3.5}" fill="${dc}"/>`;
+        s += `<text x="${xp(i)}" y="${yp(v)-8}" font-size="${isMin?10:9}" font-weight="${isMin?'700':'400'}" fill="${dc}" text-anchor="middle">${v}</text>`;
+      });
+    }
+  });
+  labels.forEach((lb,i)=>{
+    s += `<text x="${xp(i)}" y="${H-3}" font-size="10" fill="#56695a" text-anchor="middle">${lb}</text>`;
+  });
+  s += '</svg>';
+  return s;
+}
+
+/* ── SVG horizontal bar chart ── */
+function barChart(items) {
+  const W=460, H=items.length*38+16, pL=148, pR=52, pT=8, pB=8;
+  const bH=22, gap=16;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">`;
+  items.forEach(({label,value,color},i)=>{
+    const y = pT + i*(bH+gap);
+    const bw = (W-pL-pR)*value/100;
+    s += `<text x="${pL-8}" y="${y+bH/2+4}" font-size="11.5" fill="#56695a" text-anchor="end">${label}</text>`;
+    s += `<rect x="${pL}" y="${y}" width="${W-pL-pR}" height="${bH}" rx="4" fill="#e8f2e9"/>`;
+    s += `<rect x="${pL}" y="${y}" width="${bw}" height="${bH}" rx="4" fill="${color}"/>`;
+    s += `<text x="${pL+bw+7}" y="${y+bH/2+4}" font-size="11.5" font-weight="600" fill="${color}">${value}%</text>`;
+  });
+  s += '</svg>';
+  return s;
+}
+
+/* ── Render sidebar teacher list ── */
+function updateSearch(q) { searchQuery = q.trim().toLowerCase(); renderList(); }
+function updateSort(v)   { sortBy = v; renderList(); }
+function updateFilter(v) {
+  filterTrend = v;
+  document.querySelectorAll('.fpill').forEach(b => b.classList.toggle('active', b.dataset.trend === v));
+  renderList();
+}
+
+function renderList() {
+  if (!activeSchool) {
+    document.getElementById('teacherList').innerHTML =
+      '<div style="padding:18px 10px;color:rgba(255,255,255,.35);font-size:12px;text-align:center;line-height:1.6">Select a school above<br>to see its teachers</div>';
+    return;
+  }
+  let set = getSet();
+  if (searchQuery)        set = set.filter(d => d.name.toLowerCase().includes(searchQuery));
+  if (filterTrend!=='all') set = set.filter(d => d.trend === filterTrend);
+  if (sortBy==='name')       set = [...set].sort((a,b)=>a.name.localeCompare(b.name));
+  if (sortBy==='score-asc')  set = [...set].sort((a,b)=>(a.obsAvg??0)-(b.obsAvg??0));
+  if (sortBy==='score-desc') set = [...set].sort((a,b)=>(b.obsAvg??0)-(a.obsAvg??0));
+  if (!set.length) {
+    document.getElementById('teacherList').innerHTML =
+      '<div style="padding:18px 10px;color:rgba(255,255,255,.35);font-size:12px;text-align:center">No teachers match</div>';
+    return;
+  }
+  document.getElementById('teacherList').innerHTML = set.map(d => {
+    const arrow = d.trend==="Improving"
+      ? `<span style="color:#69f0ae">${tArrow(d.trend)}</span>`
+      : d.trend==="Declining"
+      ? `<span style="color:#ff5252">${tArrow(d.trend)}</span>`
+      : `<span style="color:rgba(255,255,255,.7)">${tArrow(d.trend)}</span>`;
+    return `<div class="t-item${selectedTeacher===d.name?' active':''}"
+      onclick="selectTeacher('${d.name.replace(/'/g,"\\'")}')">
+      <span class="t-arrow">${arrow}</span>
+      <span class="t-name">${d.name}</span>
+      <span class="t-score">${d.obsAvg!=null?d.obsAvg+'%':'N/A'}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── Render KPI strip ── */
+function renderKPIs() {
+  const set = getSet();
+  const strip = document.getElementById('kpiStrip');
+
+  if (!activeSchool) {
+    strip.innerHTML = `<div style="grid-column:1/-1;padding:14px 20px;color:var(--muted);font-size:12px">Select a school from the sidebar to see its data.</div>`;
+    return;
+  }
+
+  if (selectedTeacher) {
+    const d = DATA.find(r=>r.name===selectedTeacher);
+    const peak = Math.max(...d.months);
+    strip.innerHTML = `
+      <div class="kpi-cell"><div class="kpi-lbl">Obs Average</div><div class="kpi-val green">${d.obsAvg!=null?d.obsAvg+'%':'N/A'}</div><div class="kpi-sub">across 6 visits</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Trend</div><div class="kpi-val" style="color:var(--${tClass(d.trend)})">${tArrow(d.trend)} ${d.trend}</div><div class="kpi-sub">Sept → Feb</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Peak Score</div><div class="kpi-val">${peak}%</div><div class="kpi-sub">${MONTHS[d.months.indexOf(peak)]}</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Indicator Avg</div><div class="kpi-val">${d.catAvg!=null?d.catAvg+'%':'N/A'}</div><div class="kpi-sub">4 indicators</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Observations</div><div class="kpi-val green">${(()=>{const bn=d.name.replace(/ \(\d+ subjects?\)$/,'');const ms=MONTH_SUBJECTS[d.school+'|'+bn];return ms?ms.reduce((s,sl)=>s+(sl?sl.length:0),0):d.months.filter(v=>v!=null).length;})()}</div><div class="kpi-sub">total across all subjects</div></div>`;
+  } else {
+    const avg = r1(mean(set.map(d=>d.obsAvg)));
+    const imp = set.filter(d=>d.trend==="Improving").length;
+    const ste = set.filter(d=>d.trend==="Steady").length;
+    const dec = set.filter(d=>d.trend==="Declining").length;
+    strip.innerHTML = `
+      <div class="kpi-cell"><div class="kpi-lbl">Teachers</div><div class="kpi-val green">${set.length}</div><div class="kpi-sub">${COACHES[activeSchool]||""}</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">School Average</div><div class="kpi-val">${avg!=null?avg+'%':'N/A'}</div><div class="kpi-sub">observation score</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Improving</div><div class="kpi-val green">${imp}</div><div class="kpi-sub">trending up</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Steady</div><div class="kpi-val">${ste}</div><div class="kpi-sub">holding</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Need Attention</div><div class="kpi-val red">${dec}</div><div class="kpi-sub">declining</div></div>`;
+  }
+}
+
+/* ── Render main content ── */
+function renderContent() {
+  const el = document.getElementById('content');
+
+  if (!activeSchool) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-title">Select a school to begin</div>
+        <div class="empty-sub">Choose a school from the sidebar, then select a teacher to view their observation history and indicator scores.</div>
+      </div>
+      <div class="foot" style="margin-top:16px">Source: Teacher_Coaching_Master_Data &nbsp;·&nbsp; World Bank Teach Tool · 14 schools · 166 teachers</div>`;
+    return;
+  }
+
+  if (selectedTeacher) {
+    const d   = DATA.find(r=>r.name===selectedTeacher);
+    const tc  = tClass(d.trend);
+    const peak = Math.max(...d.months);
+
+    const minCat  = Math.min(...d.cats.filter(x=>x!=null));
+    const indBars = IND_SHORT.map((short,i)=>{
+      const v = d.cats[i];
+      const isMin = v!=null && v===minCat;
+      return `
+      <div class="ind-row-css">
+        <div class="ind-lbl">${short}</div>
+        <div class="ind-track"><div class="ind-fill" style="width:${v!=null?v:0}%;${isMin?'background:#c62828':''}"></div></div>
+        <div class="ind-pct" style="${isMin?'color:#c62828':''}">${v!=null?v+'%':'N/A'}</div>
+      </div>`;
+    }).join('');
+
+    const baseName  = d.name.replace(/ \(\d+ subjects?\)$/, '');
+    const monthSubs = MONTH_SUBJECTS[d.school+'|'+baseName] || [];
+    const tiles = d.months.map((v,i)=>{
+      const subs = monthSubs[i] || [];
+      const subLabel = subs.join(' · ');
+      return `
+      <div class="m-tile${v===peak?' peak':''}${selectedVisitIdx===i?' selected':(v==null?' no-data':'')}" ${v!=null?`onclick="selectVisit(${i})"`:'style="cursor:default"'}>
+        <div class="m-lbl">${MONTHS[i]}</div>
+        <div class="m-val">${v!=null?v:'N/A'}</div>
+        ${subLabel?`<div class="m-subj">${subLabel}</div>`:''}
+      </div>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="card" style="margin-bottom:16px">
+        <div class="detail-hd">
+          <div>
+            <div class="detail-name">${d.name}</div>
+            <div class="detail-school">${d.school} · Coach: ${COACHES[d.school]}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+            <span class="badge ${tc}">${tArrow(d.trend)} ${d.trend}</span>
+            <div class="share-wrap">
+              <button class="chip-btn" onclick="toggleShareMenu(event)" title="Share this teacher's report">&#128228; Share Report</button>
+              <div class="share-menu" id="shareMenu" hidden>
+                <button onclick="shareReport('email')">&#9993; Email</button>
+                <button onclick="shareReport('whatsapp')">&#128172; WhatsApp</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-bottom:0">
+          <div>
+            <div class="card-title collapsible-hd open" onclick="toggleSection(this)">Observation Trends <span class="toggle-arrow">▾</span></div>
+            <div>
+              <div class="card-sub">Sept 2025 – Feb 2026</div>
+              ${(()=>{
+                const schoolSet = DATA.filter(r=>r.school===d.school);
+                const schoolAvg = MONTHS.map((_,i)=>r1(mean(schoolSet.map(t=>t.months[i]))));
+                return lineChart([
+                  {values:d.months,  color:"#1b5e20", fill:"#c8e6c9"},
+                  {values:schoolAvg, color:"#e8a217",  fill:null, secondary:true}
+                ], MONTHS);
+              })()}
+              <div class="chart-legend">
+                <span><span class="legend-dot" style="background:#1b5e20"></span>This teacher</span>
+                <span><span class="legend-dot" style="background:#e8a217"></span>School avg</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card-title collapsible-hd open" onclick="toggleSection(this)">Average Observation Indicators <span class="toggle-arrow">▾</span></div>
+            <div>
+              <div class="ind-bars" style="margin-top:8px">${indBars}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border)">
+          <div class="card-title">Previous Observations</div>
+          <div class="card-sub">Highest visit highlighted · Click any visit for details</div>
+          <div class="month-tiles">${tiles}</div>
+          <div id="visitDetail"></div>
+        </div>
+      </div>
+      <div class="foot">Source: Teacher_Coaching_Master_Data &nbsp;·&nbsp; Obs Avg and Trend from source file &nbsp;·&nbsp; 4-Ind Avg = average of four latest indicator scores</div>`;
+  } else {
+    const set = getSet();
+    const monthlyAvg = MONTHS.map((_,i)=>r1(mean(set.map(d=>d.months[i]))));
+    const indAvgs    = INDICATORS.map((name,i)=>({
+      name, short:IND_SHORT[i], value:r1(mean(set.map(d=>d.cats[i])))
+    }));
+    const validInds  = indAvgs.filter(a=>a.value!=null);
+    const minInd     = validInds.length ? Math.min(...validInds.map(a=>a.value)) : null;
+    const indItems   = validInds.map(({short,value})=>({label:short,value,color:value===minInd?'#c62828':'#1b5e20'}));
+
+    const indKpiCards = indAvgs.map(({name,value})=>`
+      <div class="ind-kpi-cell">
+        <div class="ind-kpi-lbl">${name}</div>
+        <div class="ind-kpi-val">${value!=null?value+'%':'N/A'}</div>
+        <div class="ind-kpi-sub">school average</div>
+      </div>`).join('');
+
+    el.innerHTML = `
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Observation Trends</div>
+          <div class="card-sub">School average · Sept 2025 – Feb 2026</div>
+          ${lineChart([{values:monthlyAvg,color:"#1b5e20",fill:"#c8e6c9"}],MONTHS)}
+        </div>
+        <div class="card">
+          <div class="card-title">Average Observation Indicators</div>
+          <div class="card-sub">School average of four latest indicator scores</div>
+          ${barChart(indItems)}
+        </div>
+      </div>
+      <div class="empty" style="margin-top:16px">
+        <div class="empty-title">Select a teacher from the list</div>
+        <div class="empty-sub">Their monthly scores, indicator breakdown, and visit-by-visit trend will appear here.</div>
+      </div>
+      <div class="foot" style="margin-top:16px">Source: Teacher_Coaching_Master_Data &nbsp;·&nbsp; Obs Avg and Trend from source file &nbsp;·&nbsp; 4-Ind Avg = average of four latest indicator scores</div>`;
+  }
+}
+
+/* ── Topbar ── */
+function updateTopbar() {
+  const left = document.getElementById('topbarLeft');
+  const set = getSet();
+  if (selectedTeacher) {
+    const d = DATA.find(r=>r.name===selectedTeacher);
+    left.innerHTML = `
+      <button class="back-btn" onclick="goBack()" title="Back to school view" style="margin-top:0;flex-shrink:0">&#8592;</button>
+      <div>
+        <div class="topbar-name">${d.name}</div>
+        <div class="topbar-meta">${d.school} · ${d.trend}</div>
+      </div>`;
+  } else if (!activeSchool) {
+    left.innerHTML = `<div class="topbar-name">Observation Score History</div><div class="topbar-meta">Select a school to begin</div>`;
+  } else {
+    left.innerHTML = `<div class="topbar-name">${activeSchool}</div><div class="topbar-meta">${set.length} teachers · <span style="font-weight:700;color:var(--accent)">Coach</span> ${COACHES[activeSchool]||""}</div>`;
+  }
+}
+
+/* ── Events ── */
+function onSchoolChange() {
+  activeSchool    = document.getElementById('schoolSel').value;
+  selectedTeacher = null;
+  searchQuery     = '';
+  filterTrend     = 'all';
+  const s = document.getElementById('teacherSearch'); if(s) s.value='';
+  document.querySelectorAll('.fpill').forEach(b=>b.classList.toggle('active',b.dataset.trend==='all'));
+  refresh();
+}
+function toggleSection(hd) {
+  const body = hd.nextElementSibling;
+  const isHidden = body.hidden;
+  body.hidden = !isHidden;
+  hd.classList.toggle('open', isHidden);
+}
+function selectVisit(idx) {
+  const _d = DATA.find(r=>r.name===selectedTeacher);
+  if (!_d || _d.months[idx] == null) return;
+  selectedVisitIdx = (selectedVisitIdx === idx) ? null : idx;
+  document.querySelectorAll('.m-tile').forEach((t,i) => {
+    t.classList.toggle('selected', i === selectedVisitIdx);
+  });
+  const panel = document.getElementById('visitDetail');
+  if (selectedVisitIdx === null) { panel.innerHTML = ''; return; }
+  const d = DATA.find(r=>r.name===selectedTeacher);
+  const score = d.months[selectedVisitIdx];
+  const bn = d.name.replace(/ \(\d+ subjects?\)$/, '');
+  const ms = MONTH_SUBJECTS[d.school+'|'+bn] || [];
+  const subs = ms[selectedVisitIdx] || [];
+  const subList = subs.length ? subs : [''];
+  const indCards = INDICATORS.map(name=>`
+    <div class="visit-ind-row">
+      <div class="visit-ind-name">${name}</div>
+      <div class="visit-ind-val">N/A</div>
+    </div>`).join('');
+  const subBoxes = subList.map(sub => {
+    const cpd = (sub ? CPD_SUBJECT_DATA[d.school+'|'+bn.toLowerCase()+'|'+sub] : null)
+             || CPD_DATA[d.school+'|'+bn.toLowerCase()]
+             || null;
+    const cpdHtml = cpd ? `
+      <div class="visit-cpd">
+        <div class="visit-cpd-label">CPD Recommendation</div>
+        <div class="visit-cpd-val">${cpd}</div>
+      </div>` : '';
+    return `
+      <div class="visit-sub-box">
+        ${sub ? `<div class="visit-sub-name">${sub}</div>` : ''}
+        <div class="visit-detail-inds">${indCards}</div>
+        ${cpdHtml}
+      </div>`;
+  }).join('');
+  panel.innerHTML = `
+    <div class="visit-detail">
+      <div class="visit-detail-hd">
+        <span class="visit-detail-month">${MONTHS[selectedVisitIdx]}</span>
+        <span class="visit-detail-score">${score!=null?score+'%':'N/A'}</span>
+      </div>
+      <div class="visit-sub-boxes">${subBoxes}</div>
+    </div>`;
+}
+function goBack() {
+  selectedTeacher = null;
+  selectedVisitIdx = null;
+  refresh();
+}
+function selectTeacher(name) {
+  selectedTeacher = selectedTeacher===name ? null : name;
+  selectedVisitIdx = null;
+  refresh();
+}
+function refresh() {
+  renderList();
+  renderKPIs();
+  updateTopbar();
+  renderContent();
+}
+
+/* ── Auth ── */
+function initLoginDropdowns() {
+  rebuildNameDropdown();
+}
+
+function rebuildNameDropdown() {
+  const sel = document.getElementById('loginCoach');
+  sel.innerHTML = '<option value="" disabled selected>Select your name…</option>';
+  Object.entries(USER_DB)
+    .filter(([, u]) => u.role === loginRole)
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name))
+    .forEach(([k, u]) => {
+      const opt = document.createElement('option');
+      opt.value = k; opt.textContent = u.name;
+      sel.appendChild(opt);
+    });
+}
+
+function setLoginRole(role) {
+  loginRole = role;
+  document.getElementById('pillCoach').classList.toggle('active', role === 'coach');
+  document.getElementById('pillPrincipal').classList.toggle('active', role === 'principal');
+  document.getElementById('loginCoach').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').hidden = true;
+  rebuildNameDropdown();
+}
+
+function onCoachSelect() {
+  document.getElementById('loginErr').hidden = true;
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginPass').focus();
+}
+
+function rebuildSchoolDropdown() {
+  const sel = document.getElementById('schoolSel');
+  const schools = sessionSchools === null ? Object.keys(COACHES) : sessionSchools;
+  sel.innerHTML = `<option value="" disabled${!activeSchool?' selected':''}>Select a school…</option>` +
+    schools.map(s=>`<option value="${s}"${activeSchool===s?' selected':''}>${s}</option>`).join('');
+  if (activeSchool && !schools.includes(activeSchool)) {
+    activeSchool = ''; selectedTeacher = null;
+  }
+}
+
+function _applyLogin(username, school) {
+  const user = USER_DB[username];
+  currentUser    = user;
+  sessionSchools = user.schools ? [...user.schools] : null;
+  sessionStorage.setItem('obs_user', username);
+  document.getElementById('loginOverlay').hidden = true;
+  document.getElementById('chipName').textContent = user.name;
+  const chip = document.getElementById('userChip');
+  chip.hidden = false;
+  document.getElementById('addSchoolBtn').hidden = (sessionSchools === null);
+  rebuildSchoolDropdown();
+  if (school && sessionSchools && sessionSchools.includes(school)) {
+    activeSchool = school;
+    document.getElementById('schoolSel').value = activeSchool;
+  } else if (sessionSchools && sessionSchools.length >= 1) {
+    activeSchool = sessionSchools[0];
+    document.getElementById('schoolSel').value = activeSchool;
+  }
+  refresh();
+}
+
+function doLogin() {
+  const coachKey = document.getElementById('loginCoach').value;
+  const pass     = document.getElementById('loginPass').value;
+  const errEl    = document.getElementById('loginErr');
+  const card     = document.getElementById('loginCard');
+  function shake() { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+  if (!coachKey) { errEl.textContent = 'Please select your name.';    errEl.hidden = false; shake(); return; }
+  if (!pass)     { errEl.textContent = 'Please enter your password.'; errEl.hidden = false; shake(); return; }
+  const user = USER_DB[coachKey];
+  if (!user || user.pass !== pass) { errEl.textContent = 'Incorrect password.'; errEl.hidden = false; shake(); return; }
+  errEl.hidden = true;
+  _applyLogin(coachKey);
+}
+
+function doLogout() {
+  currentUser = null; sessionSchools = [];
+  activeSchool = ''; selectedTeacher = null;
+  sessionStorage.removeItem('obs_user');
+  document.getElementById('loginOverlay').hidden = false;
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').hidden = true;
+  document.getElementById('userChip').hidden = true;
+  loginRole = 'coach';
+  document.getElementById('pillCoach').classList.add('active');
+  document.getElementById('pillPrincipal').classList.remove('active');
+  rebuildNameDropdown();
+  rebuildSchoolDropdown();
+  refresh();
+  setTimeout(() => document.getElementById('loginCoach').focus(), 50);
+}
+
+function openVisit() {
+  document.getElementById('visitCode').value = '';
+  document.getElementById('visitErr').hidden = true;
+  document.getElementById('visitModal').hidden = false;
+  setTimeout(() => document.getElementById('visitCode').focus(), 50);
+}
+
+function closeVisit() {
+  document.getElementById('visitModal').hidden = true;
+}
+
+function doVisit() {
+  const code   = (document.getElementById('visitCode').value || '').trim().toUpperCase();
+  const school = SCHOOL_CODES[code];
+  const errEl  = document.getElementById('visitErr');
+  if (!school) {
+    errEl.textContent = 'Access code not recognised.';
+    errEl.hidden = false; return;
+  }
+  if (sessionSchools && sessionSchools.includes(school)) {
+    errEl.textContent = `${school} is already unlocked.`;
+    errEl.hidden = false; return;
+  }
+  if (sessionSchools) sessionSchools.push(school);
+  closeVisit();
+  rebuildSchoolDropdown();
+  refresh();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (!document.getElementById('loginOverlay').hidden) { doLogin(); return; }
+    if (!document.getElementById('visitModal').hidden)   { doVisit(); return; }
+  }
+  if (e.key === 'Escape' && !document.getElementById('visitModal').hidden) closeVisit();
+});
+
+initLoginDropdowns();
+const _savedUser = sessionStorage.getItem('obs_user');
+if (_savedUser && USER_DB[_savedUser]) {
+  _applyLogin(_savedUser);
+} else {
+  refresh();
+}
+</script>
+</body>
+</html>
