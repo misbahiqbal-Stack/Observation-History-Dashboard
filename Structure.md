@@ -47,63 +47,73 @@ observations_laptop.html    # full-featured desktop dashboard (has login)
 - **Max-width:** 430px centred — looks like a phone on desktop too.
 - **No login system.**
 
-## observations_laptop.html — Laptop Dashboard (as of 2026-07-01)
+## observations_laptop.html — Laptop Dashboard (verified against source 2026-08-21)
 
 - **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\observations_laptop.html`
-- **Artifact URL:** `https://claude.ai/code/artifact/c7944fa0-726f-4149-9bb9-451120e415c0`
-- **Purpose:** Full-featured desktop/laptop dashboard. Separate from `dashboard.html` and `observations.html`.
-- **Requires internet once** to load DM Serif Display + Inter fonts from Google Fonts CDN (artifact version uses system fonts).
-- **Design identity:** Forest green sidebar (`#1b5e20`) + amber active-selection accent (`#e8a217`). DM Serif Display for headings; Inter for body. Sage-green background (`#f5f9f5`).
-- **Login system:** Full-screen login overlay guards the dashboard. Coaches see only their school after login. Admin sees all 12. Visit codes let coaches temporarily unlock additional schools.
+- **Purpose:** Full-featured desktop/laptop dashboard. Separate from `dashboard.html` and `observations.html`, and the most feature-complete of the three — well ahead of what the old `Memory.md` had documented (this section was re-verified directly against the file's source, not carried over from the stale doc).
+- **Design identity:** Forest green sidebar (`#1b5e20`) + amber active-selection accent (`#e8a217`). Sage-green background (`#f5f9f5`).
+- **Login system:** Full-screen login overlay, three roles — `coach`, `principal`, `admin` — shown as role pills in the UI.
   - Login credentials → see **Login Credentials** below.
-  - School visit codes → see **School Visit Codes** below.
-- **Layout:**
-  - Fixed sidebar (264px): school selector dropdown (filtered to user's allowed schools) + teacher roster sorted A→Z by first name within each school. Trend arrows are bright (↑ green `#69f0ae` / ↓ red `#ff5252` / → faint white), font-size 16px bold.
-  - Top bar: user chip (name + "+ Add School" button + "Sign out") appears after login.
-  - KPI strip (5 cells): changes between school summary and teacher detail.
-  - Main content area: school overview shows monthly trend line + indicator bar chart; teacher detail shows personal line chart + indicator progress bars + 6 visit tiles.
-  - **Removed:** the four indicator KPI boxes (Lesson Objective Clarity etc.) that were below the charts in school overview — they duplicated the bar chart.
-- **Interaction:** Click teacher → loads detail. Click again → deselects. School dropdown resets selection.
-- **Data:** 120 teachers × 12 schools embedded in JS `DATA` array, sorted alphabetically by first name within each school.
+  - School unlock codes → see **School Codes** below.
+- **Data model:** 166 teacher records across **14 schools** (12 original + Minhaj Public School +
+  New Horizon School), embedded in JS `DATA` array. Some teachers cover multiple subjects —
+  their name is suffixed `(N subjects)` and their monthly/visit view splits into one box per
+  subject (`MONTH_SUBJECTS` lookup). Some monthly scores are `null` (missing observation for
+  that visit) — rendered as a gap, not zero.
+- **Indicators — renamed from the original set:** `Objective Clarity`, `Student Engagement`,
+  `Class Management`, `Instructional Quality` (this last one replaces the original
+  "Differentiated Instruction" — a content change, not just a rename). Per-visit indicator
+  breakdown is always "N/A" (indicators are latest-snapshot only, not tracked per visit) — those
+  N/A tiles are intentionally non-clickable.
+- **CPD recommendations:** `CPD_SUBJECT_DATA` / `CPD_DATA` constants supply a "CPD Recommendation"
+  string shown inside each visit's subject box, keyed by school + teacher + (optionally) subject.
+- **Layout:** Fixed sidebar with school selector + teacher roster (searchable/filterable, sorted
+  A→Z by first name within each school). KPI strip changes between school summary and teacher
+  detail. School overview shows monthly trend line + indicator bar chart + school average line;
+  teacher detail shows personal line chart + indicator bars + collapsible visit tiles (subject
+  boxes with indicators + CPD recommendation).
+- **Interaction:** Click teacher → loads detail; click again → deselects. School dropdown resets selection.
 
 ### Login Credentials (observations_laptop.html)
 
-All stored in `USER_DB` constant in the JS. Passwords are visible in source (client-side only — security by effort, not encryption).
+All stored in `USER_DB` constant in the JS — passwords are simple (`123` / `admin`), visible in
+source (client-side only — security by effort, not encryption). 8 coaches, each covering one or
+more schools (no longer 1-to-1); 14 principal accounts, one per school, each scoped to only that
+school; 1 admin (sees everything).
 
-| Username | Password | School |
-|---|---|---|
-| `saima.jabeen` | `noor2025` | Al-Noor Academy |
-| `aneela.khaliq` | `bright2025` | Bright Future School |
-| `javeria.khalil` | `city2025` | City Grammar School |
-| `hafsa.bashir` | `daanish2025` | Daanish Public School |
-| `iqra.arshad` | `ever2025` | Evergreen Institute |
-| `ashas.khan` | `falcon2025` | Falcon Academy |
-| `rabia.saeed` | `green2025` | Greenwood Public School |
-| `usman.tariq` | `horizon2025` | Horizon Model School |
-| `mehnaz.iqbal` | `iqra2025` | Iqra Education Centre |
-| `bilal.ahsan` | `junior2025` | Junior Scholars Academy |
-| `sana.yousaf` | `know2025` | Knowledge Valley School |
-| `kashif.mehmood` | `light2025` | Lighthouse Academy |
-| `admin` | `admin2025` | All schools |
+| Username | Password | Role | School(s) |
+|---|---|---|---|
+| `saima jabeen` | `123` | coach | Al-Noor Academy, Bright Future School, City Grammar School |
+| `aneela khaliq` | `123` | coach | Daanish Public School, Evergreen Institute |
+| `javeria khalil` | `123` | coach | Falcon Academy, Greenwood Public School |
+| `hafsa bashir` | `123` | coach | Horizon Model School, Iqra Education Centre |
+| `iqra arshad` | `123` | coach | Junior Scholars Academy, Knowledge Valley School |
+| `ashas khan` | `123` | coach | Lighthouse Academy |
+| `rabia saeed` | `123` | coach | Minhaj Public School |
+| `usman tariq` | `123` | coach | New Horizon School |
+| `admin` | `admin` | admin | All schools |
+| `principal <school>` | `123` | principal | One school each — key is `principal` + a lowercase school slug (e.g. `principal alnoor`, `principal brightfuture`, … all 14 schools) |
 
-### School Visit Codes (observations_laptop.html)
+### School Codes (observations_laptop.html)
 
-Coaches type these after login via "+ Add School" to unlock an additional school for that session.
+`SCHOOL_CODES` constant — 14 entries, one per school (used to unlock/reference a school by code):
 
 | Code | School |
 |---|---|
-| `AN25` | Al-Noor Academy |
-| `BF25` | Bright Future School |
-| `CG25` | City Grammar School |
-| `DP25` | Daanish Public School |
-| `EV25` | Evergreen Institute |
-| `FA25` | Falcon Academy |
-| `GP25` | Greenwood Public School |
-| `HM25` | Horizon Model School |
-| `IE25` | Iqra Education Centre |
-| `JS25` | Junior Scholars Academy |
-| `KV25` | Knowledge Valley School |
-| `LA25` | Lighthouse Academy |
+| `ANA` | Al-Noor Academy |
+| `BFS` | Bright Future School |
+| `CGS` | City Grammar School |
+| `DPS` | Daanish Public School |
+| `EI` | Evergreen Institute |
+| `FA` | Falcon Academy |
+| `GPS` | Greenwood Public School |
+| `HMS` | Horizon Model School |
+| `IEC` | Iqra Education Centre |
+| `JSA` | Junior Scholars Academy |
+| `KVS` | Knowledge Valley School |
+| `LA` | Lighthouse Academy |
+| `MPS` | Minhaj Public School |
+| `NHS` | New Horizon School |
 
 ## Note on dataset drift
 

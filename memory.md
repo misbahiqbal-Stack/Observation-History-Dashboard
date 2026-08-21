@@ -21,8 +21,16 @@
 
 - **Project name:** Observation History
 - **Goal:** Track and visualize teacher classroom observation scores (World Bank Teach Tool) over time, so progress and trends are easy to see at a glance.
-- **Data source:** Google Sheet (expanded from original PDF): 12 schools × 10 teachers = 120 teachers total.
-- **Schools:** 12 schools, 10 teachers each, 120 teachers total. Each school has exactly one dedicated coach (1-to-1 mapping).
+- **Data source:** Originally a Google Sheet (expanded from a PDF): 12 schools × 10 teachers = 120 teachers.
+- **⚠️ The three dashboard files no longer share one dataset — verified by reading source 2026-08-21:**
+  - `dashboard.html`: original 6 schools / 30 teachers (never received later refreshes).
+  - `observations.html`: 12 schools / 120 teachers (2026-06-30 refresh).
+  - `observations_laptop.html`: 14 schools / 166 teacher records, 8 multi-school coaches, plus
+    principal + admin roles — furthest ahead, and **not fully reflected below**. This table and
+    the indicator list are the *original* 12-school model; for `observations_laptop.html`'s
+    actual current schools/coaches/indicators, see `Structure.md` (this memory file had gone
+    stale on that file before the 2026-08-21 doc restructure caught it).
+- **Original 12-school model** (still what `observations.html` uses; each school had exactly one dedicated coach):
 
 | School | Coach |
 |---|---|
@@ -40,11 +48,14 @@
 | Lighthouse Academy | Kashif Mehmood |
 
 - **Scoring scale:** Percentages, 0–100% (100 = highest). **NOT a 1–5 scale** — user corrected this early in session 1.
-- **Four indicators scored per teacher (latest snapshot only, not monthly):**
+- **Four indicators scored per teacher (latest snapshot only, not monthly) — original set, still used by `dashboard.html`/`observations.html`:**
   1. Lesson Objective Clarity
   2. Student Engagement
   3. Classroom Management
   4. Differentiated Instruction
+  - `observations_laptop.html` uses a renamed/changed set instead: Objective Clarity, Student
+    Engagement, Class Management, **Instructional Quality** (this last one is a substantive
+    change from "Differentiated Instruction", not just a rename — see `Structure.md`).
   - Assessment Practices exists in the data but is **deliberately excluded** per user instruction.
 - **Monthly data:** "Obs Score – Visit 1–6" = Sept, Oct, Nov, Dec, Jan, Feb. One overall score per visit per teacher. Not broken down by indicator.
 - **Overall score calculation:** Simple average of the 4 indicator scores (equal weight).
@@ -552,3 +563,9 @@ _Last reviewed: 2026-08-21_
 
 ## Version 134 (2026-08-18 14:40)
 - Modified: c:\Users\misba\OneDrive\Desktop\Project 1\.gitignore
+
+## Version 135 (2026-08-21 15:06)
+- Modified: c:\Users\misba\OneDrive\Desktop\Project 1\Structure.md
+
+## Version 136 (2026-08-21 15:07)
+- Modified: c:\Users\misba\OneDrive\Desktop\Project 1\Planning.md

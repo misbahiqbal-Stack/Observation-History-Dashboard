@@ -16,8 +16,11 @@
 
 - [ ] `observations.html` has no login system (only `observations_laptop.html` does).
 - [ ] `dashboard.html` has no login system (only `observations_laptop.html` does).
-- [ ] `dashboard.html` still has the original 30-teacher / 6-school dataset — missed the
-  2026-06-30 refresh to 120 teachers / 12 schools that the other two files received.
+- [ ] All three dashboard files now have **different datasets** (verified 2026-08-21):
+  `dashboard.html` = 6 schools/30 teachers (original), `observations.html` = 12 schools/120
+  teachers (2026-06-30 refresh), `observations_laptop.html` = 14 schools/166 records, 8
+  multi-school coaches, principal+admin roles (furthest ahead, undocumented until now — see
+  `Structure.md`). Not yet requested to be reconciled, but worth flagging to the user.
 - [ ] Passwords in `observations_laptop.html`'s `USER_DB` are plain-text in source — acceptable
   for now (client-side-only, static file), but flag if this ever needs to be hardened.
 - [ ] No feedback yet from the user on the current desktop `dashboard.html` layout after the
