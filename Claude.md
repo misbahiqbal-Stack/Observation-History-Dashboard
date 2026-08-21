@@ -1,69 +1,58 @@
-# CLAUDE.md
+# Claude.md
 
-> Persistent project instructions. This file is loaded into the agent's context at the
-> start of **every** session. Keep it concise, current, and high-signal — everything here
-> costs context budget on every run.
+> Persistent project instructions. Loaded into the agent's context at the start of every
+> session. Keep it concise — the operating loop lives in `Agent_loop.md`, durable facts in
+> `memory.md`, architecture in `Structure.md`, open work in `Planning.md`, ADRs in `Decision.md`.
 
 ## 1. Project Overview
 
-- **Name:** <project name>
-- **Purpose:** <one or two sentences on what this project does and for whom>
-- **Status:** <prototype | active development | maintenance>
+- **Name:** Observation History Dashboard
+- **Purpose:** Track and visualize teacher classroom observation scores (World Bank Teach Tool)
+  over time across 12 schools / 120 teachers, so a coach/admin can see progress and trends at a
+  glance.
+- **Status:** Active development.
 
 ## 2. Tech Stack
 
-- **Language(s):** <e.g. Python 3.12, TypeScript>
-- **Frameworks / key libraries:** <e.g. FastAPI, React>
-- **Tooling:** <package manager, linter, formatter, test runner>
+- **Language(s):** HTML, CSS, JavaScript — no build step.
+- **Frameworks / key libraries:** None. Charts are inline SVG, no CDN dependencies (except
+  `observations.html` and `observations_laptop.html`'s Google Fonts, loaded once).
+- **Tooling:** None — plain text editing, opened directly in a browser.
 
 ## 3. Project Structure
 
+See `Structure.md` for the full breakdown of each file's current state. Summary:
+
 ```
-<top-level layout — only the directories that matter>
-src/        # application code
-tests/      # test suite
-docs/       # documentation
+dashboard.html              # desktop dashboard, no login, 6-school dataset (stale)
+observations.html           # mobile UI, no login, 12-school dataset
+observations_laptop.html    # full desktop dashboard, login system, 12-school dataset
 ```
 
 ## 4. Commands
 
-| Task    | Command            |
-| ------- | ------------------ |
-| Install | `<install cmd>`    |
-| Run     | `<run cmd>`        |
-| Test    | `<test cmd>`       |
-| Lint    | `<lint cmd>`       |
-| Build   | `<build cmd>`      |
+No build/install/test tooling — these are self-contained HTML files opened directly in a
+browser (double-click, or `start dashboard.html` etc.).
 
 ## 5. Coding Conventions
 
 - Match the style of surrounding code; do not reformat unrelated lines.
-- <naming conventions, e.g. snake_case for functions>
-- <error-handling expectations>
-- <testing expectations — write/update tests for changed behavior>
+- Keep each dashboard file self-contained (no external CDN dependencies) unless the user
+  accepts the tradeoff (e.g. Google Fonts in `observations.html` / `observations_laptop.html`).
+- Data lives embedded in JS arrays/objects within each file — there is no external database.
 
 ## 6. Agent Workflow Rules
 
-These rules govern how the agent operates in this project:
-
-1. **Read before writing.** Inspect existing files and patterns before adding code.
-2. **Plan, then act.** For non-trivial work, outline the steps first.
-3. **Record decisions.** Append any architectural or non-obvious choice to `Decisions.md`.
-4. **Update memory.** Durable facts (preferences, constraints, gotchas) go in `Memory.md`.
-5. **Log sessions.** Summarize what changed and what's next in `Session_log.md`.
-6. **Verify.** Run tests/build after changes; report failures honestly.
-7. **Ask when blocked.** Surface genuine decisions to the user rather than guessing.
+See `Agent_loop.md` for the full operating loop and guardrails.
 
 ## 7. Guardrails
 
-- Do **not** commit secrets, credentials, or `.env` contents.
-- Do **not** perform destructive operations (force-push, mass-delete, drop tables) without explicit confirmation.
-- Do **not** edit generated files or `node_modules` / `dist` directly.
-- <other project-specific boundaries>
+See `Agent_loop.md` → "Guardrails".
 
 ## 8. References
 
-- Memory: [Memory.md](Memory.md)
-- Decisions: [Decisions.md](Decisions.md)
-- Session log: [Session_log.md](Session_log.md)
-- External docs: <links>
+- Planning / open tasks: [Planning.md](Planning.md)
+- Agent operating loop: [Agent_loop.md](Agent_loop.md)
+- Memory (durable facts + session history): [memory.md](memory.md)
+- Structure (per-file architecture): [Structure.md](Structure.md)
+- Decisions (ADR log): [Decision.md](Decision.md)

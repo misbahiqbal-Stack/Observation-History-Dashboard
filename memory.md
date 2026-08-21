@@ -1,8 +1,11 @@
-# Memory.md
+# memory.md
 
-> Durable, long-lived facts the agent should remember across sessions. Unlike `Session_log.md`
-> (which is chronological and ephemeral), entries here represent the **current truth**. Update
-> entries in place when they change; delete them when they become wrong.
+> Durable, long-lived facts the agent should remember across sessions, plus a condensed
+> session-by-session history. Unlike `Planning.md` (forward-looking open tasks), the top
+> sections here represent **current truth** — update in place when they change, delete when
+> wrong. The "Session History" section is chronological and append-only. The `## Version N`
+> entries at the bottom are auto-logged by a PostToolUse hook on every file write — don't edit
+> those by hand.
 
 ---
 
@@ -45,7 +48,6 @@
   - Assessment Practices exists in the data but is **deliberately excluded** per user instruction.
 - **Monthly data:** "Obs Score – Visit 1–6" = Sept, Oct, Nov, Dec, Jan, Feb. One overall score per visit per teacher. Not broken down by indicator.
 - **Overall score calculation:** Simple average of the 4 indicator scores (equal weight).
-- **Deliverable:** `dashboard.html` in `c:\Users\misba\OneDrive\Desktop\Project 1\`.
 
 ## Conventions Learned
 
@@ -61,90 +63,6 @@
 - **Mobile-only redesign of dashboard.html (2026-06-24):** Tried converting the desktop dashboard into a mobile card layout. User rejected it — "this is still like a dashboard." Reverted `dashboard.html` to its desktop layout. The desktop layout of `dashboard.html` must not be changed to mobile.
 - **Moving observations.html into CLAUDE.md (2026-06-29):** User asked to "move the file to claude/md." Clarified and user said "drop it for now." Do not paste large HTML files into CLAUDE.md.
 
-## dashboard.html — Current State (as of 2026-06-29)
-
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\dashboard.html`
-- **Title:** "Teacher Observation Score History" (renamed from "Teacher Observation Dashboard")
-- **School selector** at the top: dropdown filters the entire page to one school or all schools.
-- **KPI cards:** Teachers shown, observation average, Improving / Steady / Declining counts.
-- **Monthly trend line chart:** Group average across Sept–Feb for the selected school. Full width.
-- **Indicator bar chart: REMOVED** — the group-level "Average by Indicator" chart was removed per user request.
-- **Teacher detail panel:** Clicking a table row shows that teacher's personal monthly trend line + indicator breakdown. Resets when school changes.
-- **Teacher table:** Sortable by any column, searchable by name, filterable by trend.
-- **Phone responsive:** Media query at 600px makes dropdowns full-width, cards stack, controls stack vertically. Table scrolls horizontally.
-- **Offline:** No CDN. Works by double-clicking.
-
-## observations.html — Mobile UI (as of 2026-06-29)
-
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\observations.html`
-- **Purpose:** Android-style mobile UI (Material Design 3). Separate from `dashboard.html` — phone-first, portrait only.
-- **Requires internet once** to load Google Roboto font and Material Icons from CDN.
-- **Color scheme:** Dark green — primary `#1b5e20` (changed from original blue `#1a56a4`).
-- **Three screens:**
-  - Screen 1 (Home): school dropdown → teacher dropdown (populated by school) → "View Observations" button (disabled until both chosen)
-  - Screen 2 (Observations): teacher header card + trend badge, 3 summary cards, **3 collapsible accordion tabs** (Monthly Scores / Average by Indicator / Observation History — closed by default, tap to expand), "Add Observation" FAB
-  - Screen 3 (Add Observation): date picker, four indicator steppers (1–4 scale, tap +/−), notes text area, fixed "Save Observation" bar at bottom (UI only — no backend)
-- **Data:** same 30 teachers embedded in JS.
-- **Max-width:** 430px centred — looks like a phone on desktop too.
-
-## observations_laptop.html — Laptop Dashboard (as of 2026-07-01)
-
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\observations_laptop.html`
-- **Artifact URL:** `https://claude.ai/code/artifact/c7944fa0-726f-4149-9bb9-451120e415c0`
-- **Purpose:** Full-featured desktop/laptop dashboard. Separate from `dashboard.html` and `observations.html`.
-- **Requires internet once** to load DM Serif Display + Inter fonts from Google Fonts CDN (artifact version uses system fonts).
-- **Design identity:** Forest green sidebar (`#1b5e20`) + amber active-selection accent (`#e8a217`). DM Serif Display for headings; Inter for body. Sage-green background (`#f5f9f5`).
-- **Login system:** Full-screen login overlay guards the dashboard. Coaches see only their school after login. Admin sees all 12. Visit codes let coaches temporarily unlock additional schools.
-  - Login credentials → see **Login Credentials** section below.
-  - School visit codes → see **School Visit Codes** section below.
-- **Layout:**
-  - Fixed sidebar (264px): school selector dropdown (filtered to user's allowed schools) + teacher roster sorted A→Z by first name within each school. Trend arrows are bright (↑ green `#69f0ae` / ↓ red `#ff5252` / → faint white), font-size 16px bold.
-  - Top bar: user chip (name + "+ Add School" button + "Sign out") appears after login.
-  - KPI strip (5 cells): changes between school summary and teacher detail.
-  - Main content area: school overview shows monthly trend line + indicator bar chart; teacher detail shows personal line chart + indicator progress bars + 6 visit tiles.
-  - **Removed:** the four indicator KPI boxes (Lesson Objective Clarity etc.) that were below the charts in school overview — they duplicated the bar chart.
-- **Interaction:** Click teacher → loads detail. Click again → deselects. School dropdown resets selection.
-- **Data:** 120 teachers × 12 schools embedded in JS `DATA` array, sorted alphabetically by first name within each school.
-
-## Login Credentials (observations_laptop.html)
-
-All stored in `USER_DB` constant in the JS. Passwords are visible in source (client-side only — security by effort, not encryption).
-
-| Username | Password | School |
-|---|---|---|
-| `saima.jabeen` | `noor2025` | Al-Noor Academy |
-| `aneela.khaliq` | `bright2025` | Bright Future School |
-| `javeria.khalil` | `city2025` | City Grammar School |
-| `hafsa.bashir` | `daanish2025` | Daanish Public School |
-| `iqra.arshad` | `ever2025` | Evergreen Institute |
-| `ashas.khan` | `falcon2025` | Falcon Academy |
-| `rabia.saeed` | `green2025` | Greenwood Public School |
-| `usman.tariq` | `horizon2025` | Horizon Model School |
-| `mehnaz.iqbal` | `iqra2025` | Iqra Education Centre |
-| `bilal.ahsan` | `junior2025` | Junior Scholars Academy |
-| `sana.yousaf` | `know2025` | Knowledge Valley School |
-| `kashif.mehmood` | `light2025` | Lighthouse Academy |
-| `admin` | `admin2025` | All schools |
-
-## School Visit Codes (observations_laptop.html)
-
-Coaches type these after login via "+ Add School" to unlock an additional school for that session.
-
-| Code | School |
-|---|---|
-| `AN25` | Al-Noor Academy |
-| `BF25` | Bright Future School |
-| `CG25` | City Grammar School |
-| `DP25` | Daanish Public School |
-| `EV25` | Evergreen Institute |
-| `FA25` | Falcon Academy |
-| `GP25` | Greenwood Public School |
-| `HM25` | Horizon Model School |
-| `IE25` | Iqra Education Centre |
-| `JS25` | Junior Scholars Academy |
-| `KV25` | Knowledge Valley School |
-| `LA25` | Lighthouse Academy |
-
 ## Glossary
 
 - **Obs Score – Visit N** — overall observation score for a monthly classroom observation (Sept=V1 … Feb=V6).
@@ -155,7 +73,79 @@ Coaches type these after login via "+ Add School" to unlock an additional school
 
 ---
 
-_Last reviewed: 2026-06-29_
+## Session History
+
+> Condensed, chronological. Newest on top. Folded in from the retired `Session_log.md`.
+
+### 2026-08-19/21 — Docs restructured into six-file scaffold
+
+Split the old four-file scaffold (`Claude.md`, `Decisions.md`, `Memory.md`, `Session_log.md`)
+into six: `Planning.md`, `Claude.md`, `Agent_loop.md`, `memory.md`, `Structure.md`, `Decision.md`.
+`Session_log.md`'s history folded into this section; per-file architecture moved to
+`Structure.md`; the old "Agent Workflow Rules" section expanded into `Agent_loop.md`. Considered
+adding a `beads`-style task-dependency tracker — decided against it for this project (no
+concurrent/dependent task graph to track); a plain Open Tasks list in `Planning.md` covers it.
+
+### 2026-07-01 — Session 5: Login system, brighter arrows, full memory save
+
+Artifact republished (scratchpad was behind: unsorted data, stray `ind-kpi-row`). Trend arrows
+brightened (13px→16px, weight 700, opacity 1; glow on Improving/Declining). Full login system
+added to `observations_laptop.html`: 12 coach accounts + admin, session via `sessionStorage`,
+visit codes to unlock peer schools at runtime. `Memory.md` corrected (6→12 schools, all
+credentials, visit codes).
+
+**Open at the time:** `observations.html`/`dashboard.html` still had no login; passwords
+plain-text in source (accepted for a static client-side file).
+
+### 2026-07-01 — Session 4: observations.html → Artifact + versioned change log setup
+
+Converted `observations.html` to a Claude Artifact — replaced Google Fonts/Material Icons
+(CSP-blocked) with system fonts + unicode glyphs, added `aria-label`s, tabular-nums, focus
+outlines. Set up the PostToolUse hook that auto-logs every Write/Edit to `memory.md` as a
+versioned `## Version N` entry (skips writes to `memory.md` itself).
+
+**Open at the time:** `dashboard.html` still on the old 30-teacher / 6-school dataset.
+
+### 2026-06-30 — Session 3: Alphabetical sort of teachers within each school
+
+Sorted all 120 teachers by first name within each school, across `DATA` in
+`observations_laptop.html` and both `TEACHER_LIST` + `DATA` in `observations.html`.
+
+### 2026-06-30 — Session 2: Browser cache issue + Artifact publish of observations_laptop.html
+
+Diagnosed a "still showing old data" report as browser cache, not stale file. Published
+`observations_laptop.html` as a Claude Artifact (self-contained, system fonts).
+
+**Open at the time:** `dashboard.html` still on the old 30-teacher dataset.
+
+### 2026-06-30 — Data refresh: 6→12 schools, 30→120 teachers
+
+Replaced embedded teacher data in `observations.html` and `observations_laptop.html` from a
+Google Sheet (12 schools × 10 teachers). Sheet supplied name/obsAvg/coach/tier; monthly scores
+and indicator breakdowns were generated deterministically from obsAvg + tier (rules recorded in
+the original session log, not reproduced here — see git history if needed). 6 new schools added:
+Greenwood, Horizon, Iqra Education Centre, Junior Scholars, Knowledge Valley, Lighthouse.
+**`dashboard.html` was not part of this refresh** — still has the original 6 schools / 30
+teachers (confirmed still true as of 2026-08-19, see `Structure.md` → "Note on dataset drift").
+
+### 2026-06-24 — Full session: data confirmed, first dashboard.html built
+
+Corrected scoring scale (1–5 → percentages) and indicator set (3 generic → the actual 4) via
+Q&A before building anything. Extracted 30 teachers / 6 schools from the source PDF. Built
+`dashboard.html` v1: KPI cards, group trend line, indicator bar chart, sortable/searchable
+table, click-to-detail panel. Added a school selector. Attempted a mobile redesign per user
+request, then reverted after the user rejected it ("this is still like a dashboard") — see
+"What Was Tried and Rejected" above. ADR-002 and ADR-003 recorded in `Decision.md`.
+
+### 2026-06-23 — Initialize agentic workflow scaffold
+
+Created the original four-file structure (`Claude.md`, `Memory.md`, `Decisions.md`,
+`Session_log.md`) with best-practice templates. Rationale recorded as ADR-001 in `Decision.md`.
+(Superseded by the 2026-08-19/21 restructure above.)
+
+---
+
+_Last reviewed: 2026-08-21_
 
 ## Version 1 (2026-07-01 11:47)
 - Modified: c:\Users\misba\OneDrive\Desktop\Project 1\Session_log.md
