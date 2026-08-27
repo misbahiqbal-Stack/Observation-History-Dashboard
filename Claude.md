@@ -26,7 +26,9 @@ See `Structure.md` for the full breakdown of each file's current state. Summary:
 ```
 dashboard.html              # desktop dashboard, no login, 6-school dataset (stale)
 observations.html           # mobile UI, no login, 12-school dataset
-observations_laptop.html    # full desktop dashboard, login system, 12-school dataset
+observations_laptop.html    # full desktop dashboard, login system, 14-school dataset
+.claude/skills/              # portable project-context skills (see below)
+.claude/agents/              # custom subagents for this project's repetitive workflows
 ```
 
 ## 4. Commands
@@ -56,3 +58,5 @@ See `Agent_loop.md` → "Guardrails".
 - Memory (durable facts + session history): [memory.md](memory.md)
 - Structure (per-file architecture): [Structure.md](Structure.md)
 - Decisions (ADR log): [Decision.md](Decision.md)
+- Skills (portable project context for any AI assistant): [.claude/skills/](.claude/skills/)
+- Agents (custom subagents for repetitive workflows): [.claude/agents/](.claude/agents/)

@@ -15,6 +15,16 @@ Planning.md                # open tasks / current goals
 dashboard.html              # desktop dashboard (no login)
 observations.html           # mobile UI (no login)
 observations_laptop.html    # full-featured desktop dashboard (has login)
+.claude/skills/
+  project-overview/SKILL.md      # purpose, stack, conventions, common tasks, gotchas
+  update-teacher-data/SKILL.md   # data model + deterministic score-generation rules
+  manage-login-system/SKILL.md   # USER_DB/SCHOOL_CODES structure and conventions
+  publish-artifact/SKILL.md      # CSP-safe substitutions for Claude Artifact publishing
+.claude/agents/
+  data-refresh-agent.md          # adds/refreshes school-teacher-coach data
+  login-account-agent.md         # manages observations_laptop.html's login accounts
+  artifact-publish-agent.md      # publishes/refreshes a dashboard as a Claude Artifact
+  doc-keeper-agent.md            # syncs Planning.md/memory.md/Decision.md after a change
 ```
 
 ## dashboard.html — Current State (as of 2026-06-29)
