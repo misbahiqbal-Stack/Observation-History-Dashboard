@@ -1,62 +1,31 @@
 # Claude.md
 
-> Persistent project instructions. Loaded into the agent's context at the start of every
-> session. Keep it concise — the operating loop lives in `Agent_loop.md`, durable facts in
-> `memory.md`, architecture in `Structure.md`, open work in `Planning.md`, ADRs in `Decision.md`.
+> Pointers only. Open a file below when the task actually needs it — don't load everything
+> every session.
 
-## 1. Project Overview
+**Observation History Dashboard** — teacher classroom observation tracking (World Bank Teach
+Tool), three dashboard files, active development. Full purpose / stack / conventions / common
+tasks / gotchas: `.claude/skills/project-overview/SKILL.md`.
 
-- **Name:** Observation History Dashboard
-- **Purpose:** Track and visualize teacher classroom observation scores (World Bank Teach Tool)
-  over time across 12 schools / 120 teachers, so a coach/admin can see progress and trends at a
-  glance.
-- **Status:** Active development.
+## Where things live
 
-## 2. Tech Stack
-
-- **Language(s):** HTML, CSS, JavaScript — no build step.
-- **Frameworks / key libraries:** None. Charts are inline SVG, no CDN dependencies (except
-  `observations.html` and `observations_laptop.html`'s Google Fonts, loaded once).
-- **Tooling:** None — plain text editing, opened directly in a browser.
-
-## 3. Project Structure
-
-See `Structure.md` for the full breakdown of each file's current state. Summary:
+| Need | File |
+|---|---|
+| Full project context (start here for anything not covered below) | `.claude/skills/project-overview/SKILL.md` |
+| Open tasks / current goals | `Planning.md` |
+| Agent operating loop + guardrails | `Agent_loop.md` |
+| Durable facts + session history | `memory.md` |
+| Per-file architecture / current state | `Structure.md` |
+| Architectural decisions (ADR log) | `Decision.md` |
+| Task-specific playbooks (data refresh, login system, artifact publishing) | `.claude/skills/*/SKILL.md` |
+| Custom subagents for repetitive workflows | `.claude/agents/*.md` |
 
 ```
-dashboard.html              # desktop dashboard, no login, 6-school dataset (stale)
-observations.html           # mobile UI, no login, 12-school dataset
-observations_laptop.html    # full desktop dashboard, login system, 14-school dataset
-.claude/skills/              # portable project-context skills (see below)
-.claude/agents/              # custom subagents for this project's repetitive workflows
+dashboard.html              # desktop dashboard, no login
+observations.html           # mobile UI, no login
+observations_laptop.html    # full desktop dashboard, login system
 ```
 
-## 4. Commands
+## Commands
 
-No build/install/test tooling — these are self-contained HTML files opened directly in a
-browser (double-click, or `start dashboard.html` etc.).
-
-## 5. Coding Conventions
-
-- Match the style of surrounding code; do not reformat unrelated lines.
-- Keep each dashboard file self-contained (no external CDN dependencies) unless the user
-  accepts the tradeoff (e.g. Google Fonts in `observations.html` / `observations_laptop.html`).
-- Data lives embedded in JS arrays/objects within each file — there is no external database.
-
-## 6. Agent Workflow Rules
-
-See `Agent_loop.md` for the full operating loop and guardrails.
-
-## 7. Guardrails
-
-See `Agent_loop.md` → "Guardrails".
-
-## 8. References
-
-- Planning / open tasks: [Planning.md](Planning.md)
-- Agent operating loop: [Agent_loop.md](Agent_loop.md)
-- Memory (durable facts + session history): [memory.md](memory.md)
-- Structure (per-file architecture): [Structure.md](Structure.md)
-- Decisions (ADR log): [Decision.md](Decision.md)
-- Skills (portable project context for any AI assistant): [.claude/skills/](.claude/skills/)
-- Agents (custom subagents for repetitive workflows): [.claude/agents/](.claude/agents/)
+No build/install/test tooling — self-contained HTML files, opened directly in a browser.
