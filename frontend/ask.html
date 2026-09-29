@@ -78,7 +78,8 @@
 <body>
 
   <div class="card" id="loginCard">
-    <h1>Ask — sign in</h1>
+    <h1>Sign in</h1>
+    <div class="error" id="loginHint" style="color: var(--ink-2);"></div>
     <label for="password">Password</label>
     <input id="password" type="password" autocomplete="current-password" />
     <div class="error" id="loginError"></div>
@@ -120,10 +121,20 @@
     passwordInput.focus();
   }
 
+  const nextPath = new URLSearchParams(location.search).get('next');
+  if (nextPath) {
+    document.getElementById('loginHint').textContent = 'Log in to continue to ' + nextPath;
+  }
+
   async function checkSession() {
     const res = await fetch('/me');
     const data = await res.json();
-    if (data.authed) showAsk(); else showLogin();
+    if (data.authed) {
+      if (nextPath) { location.href = nextPath; return; }
+      showAsk();
+    } else {
+      showLogin();
+    }
   }
 
   async function login() {
@@ -140,6 +151,7 @@
         loginError.textContent = data.error || 'Login failed';
         return;
       }
+      if (nextPath) { location.href = nextPath; return; }
       showAsk();
     } catch (e) {
       loginError.textContent = 'Could not reach the server.';

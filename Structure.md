@@ -144,25 +144,26 @@ school; 1 admin (sees everything).
 - **Stack:** zero-dependency Node.js (`http`/`https`/`crypto`/`fs` built-ins only). `backend/
   package.json` exists only so deploy platforms detect it as a Node app and know `npm start` —
   there is still nothing to `npm install`.
-- **Routing (`backend/server.js`):** `GET /` → a small landing page linking to all four
-  frontend pages. `GET /dashboard.html`, `/observations.html`, `/observations_laptop.html`,
-  `/ask.html` → served straight from `frontend/`, unauthenticated, unchanged from before the
-  reorg. `GET /me`, `POST /login`, `POST /logout`, `POST /ask` → the Ask tool's API — only
-  `/ask` requires a valid session; the dashboards keep whatever auth (or lack of it) they
-  already had (`observations_laptop.html`'s own client-side login is separate and unaffected).
-- **Auth (Ask tool only):** single shared password (`APP_PASSWORD` env var), constant-time
+- **Routing (`backend/server.js`):** `GET /ask.html` is the only public GET route — it's the
+  login page. `GET /`, `/dashboard.html`, `/observations.html`, `/observations_laptop.html` all
+  require a valid session (see ADR-006) — an unauthenticated request 302s to
+  `/ask.html?next=<path>`, and logging in redirects straight back to it. `GET /me`, `POST
+  /login`, `POST /logout`, `POST /ask` are the auth/Ask API (`observations_laptop.html`'s own
+  separate client-side coach/principal/admin login still runs *behind* this gate, unaffected).
+- **Auth (whole app, ADR-006):** single shared password (`APP_PASSWORD` env var), constant-time
   compared (`crypto.timingSafeEqual`). On success, a random session token is stored server-side
-  (in-memory `Set` — resets on server restart, fine for a single personal user) and handed to
-  the browser as an `HttpOnly`, `SameSite=Strict` cookie.
+  (in-memory `Set` — resets on server restart/redeploy, fine for a single personal user) and
+  handed to the browser as an `HttpOnly`, `SameSite=Strict` cookie.
 - **Config:** copy `backend/.env.example` to `backend/.env` (gitignored) and fill in
   `APP_PASSWORD`, `ANTHROPIC_API_KEY`, optionally `ANTHROPIC_MODEL` (default
   `claude-sonnet-5`) and `PORT` (default `8787`).
 - **Run it:** `node backend/server.js` (or `npm start` from `backend/`), then open
   `http://localhost:8787`.
-- **Verified 2026-09-29:** after the reorg, re-tested end-to-end — `/`, `/dashboard.html`,
-  `/observations.html`, `/observations_laptop.html`, `/ask.html` all serve with byte-for-byte
-  matching content to the pre-reorg files; login/session/ask/logout cycle unchanged (still uses
-  a fake API key — the real-answer success path is still unverified, see `Planning.md`).
+- **Verified 2026-09-29:** re-tested end-to-end twice — once right after the frontend/backend
+  reorg (all four pages served unauthenticated, byte-for-byte matching pre-reorg content), again
+  after adding the full-site auth gate (unauthenticated → 302 to `/ask.html?next=...` on all
+  four routes, authenticated → 200 with matching content, login/logout cycle intact). Still
+  uses a fake API key — the real-answer success path is unverified (see `Planning.md`).
 - **Node.js was not installed on this machine** before ADR-004's task — installed via
   `winget install OpenJS.NodeJS.LTS` (v24.19.0) with the user's confirmation.
 

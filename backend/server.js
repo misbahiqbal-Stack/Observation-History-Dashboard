@@ -29,10 +29,12 @@ if (!ANTHROPIC_API_KEY) {
 
 const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
 
-const STATIC_FILES = {
+const GATED_FILES = {
   '/dashboard.html': 'dashboard.html',
   '/observations.html': 'observations.html',
   '/observations_laptop.html': 'observations_laptop.html',
+};
+const PUBLIC_FILES = {
   '/ask.html': 'ask.html',
 };
 
@@ -75,6 +77,11 @@ function parseCookies(req) {
 function isAuthed(req) {
   const cookies = parseCookies(req);
   return Boolean(cookies.session && sessions.has(cookies.session));
+}
+
+function redirectToLogin(res, wantedPath) {
+  res.writeHead(302, { Location: '/ask.html?next=' + encodeURIComponent(wantedPath) });
+  res.end();
 }
 
 function send(res, status, body, headers) {
@@ -138,12 +145,20 @@ function askClaude(question) {
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/') {
+      if (!isAuthed(req)) return redirectToLogin(res, '/');
       res.writeHead(200, { 'Content-Type': 'text/html' });
       return res.end(LANDING_PAGE);
     }
 
-    if (req.method === 'GET' && STATIC_FILES[req.url]) {
-      const html = fs.readFileSync(path.join(FRONTEND_DIR, STATIC_FILES[req.url]));
+    if (req.method === 'GET' && GATED_FILES[req.url]) {
+      if (!isAuthed(req)) return redirectToLogin(res, req.url);
+      const html = fs.readFileSync(path.join(FRONTEND_DIR, GATED_FILES[req.url]));
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && PUBLIC_FILES[req.url]) {
+      const html = fs.readFileSync(path.join(FRONTEND_DIR, PUBLIC_FILES[req.url]));
       res.writeHead(200, { 'Content-Type': 'text/html' });
       return res.end(html);
     }

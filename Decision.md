@@ -32,6 +32,33 @@ Copy the template below to the **top** of the log (newest first). Give each a se
 
 <!-- Newest entries on top. -->
 
+### ADR-006: Gate every dashboard route behind the shared session, not just /ask
+
+- **Date:** 2026-09-29
+- **Status:** Accepted
+- **Context:** ADR-005 made the project one deployable, publicly-reachable app. That surfaced a
+  real question ADR-005 didn't address: the three dashboard pages contain named teachers,
+  schools, and scores (originally sourced from a real PDF export), and
+  `observations_laptop.html` has its own weak client-side login (`123`/`admin`, visible in
+  source). Before ADR-006, only `/ask` required the shared session — the dashboards would have
+  been reachable by anyone with the deployed URL, no password at all. Asked the user directly
+  rather than assume either way, since this changes who can see real people's data.
+- **Decision:** `GET /`, `/dashboard.html`, `/observations.html`, and `/observations_laptop.html`
+  now require the same `APP_PASSWORD` session as `/ask` — an unauthenticated request 302s to
+  `/ask.html?next=<original path>`, and a successful login redirects back to it. `/ask.html`
+  itself stays reachable without a session (it has to, as the login page).
+- **Alternatives considered:** Leave the dashboards public and rely on the deploy URL being
+  effectively unlisted/obscure (rejected — the user chose otherwise, and "unlisted" is not real
+  access control); a separate password per dashboard vs. one shared gate for everything
+  (rejected — no such requirement given, and it would duplicate the session mechanism ADR-004
+  already built for no added benefit yet).
+- **Consequences:** One login now gates the whole app, not just the Ask tool — simpler mental
+  model, but it means `observations_laptop.html`'s own separate client-side login (coach/
+  principal/admin roles) is now a *second*, weaker layer behind the first; it was never
+  intended as the only line of defense and still isn't, this just adds one in front of it.
+  Re-verified end-to-end locally before committing (unauthenticated → 302 with the right
+  `next`, authenticated → 200 on all four routes, byte-for-byte unchanged file content).
+
 ### ADR-005: Reorganize into frontend/ + backend/, one deployable app
 
 - **Date:** 2026-09-29
