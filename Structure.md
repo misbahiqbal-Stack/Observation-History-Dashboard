@@ -12,12 +12,14 @@ memory.md                  # durable facts + session history + auto version log
 Structure.md               # this file
 Decision.md                # ADR log
 Planning.md                # open tasks / current goals
-dashboard.html              # desktop dashboard (no login)
-observations.html           # mobile UI (no login)
-observations_laptop.html    # full-featured desktop dashboard (has login)
-ask/                        # one-page + small server: password-gated Claude Q&A tool
-  index.html                  # box + button + answer, password login form
-  server.js                   # zero-dependency Node http server
+frontend/                  # all served HTML, static, no build step
+  frontend/dashboard.html              # desktop dashboard (no login)
+  frontend/observations.html           # mobile UI (no login)
+  frontend/observations_laptop.html    # full-featured desktop dashboard (has login)
+  ask.html                     # box + button + answer, password login form (Ask tool)
+backend/                   # the one deployable unit — a single Node process
+  server.js                   # zero-dependency http server: serves frontend/ + the Ask API
+  package.json                 # "start": "node server.js" — no dependencies, no build step
   .env.example                 # template — copy to .env, fill in real values (gitignored)
 .claude/skills/
   project-overview/SKILL.md      # purpose, stack, conventions, common tasks, gotchas
@@ -26,14 +28,14 @@ ask/                        # one-page + small server: password-gated Claude Q&A
   publish-artifact/SKILL.md      # CSP-safe substitutions for Claude Artifact publishing
 .claude/agents/
   data-refresh-agent.md          # adds/refreshes school-teacher-coach data
-  login-account-agent.md         # manages observations_laptop.html's login accounts
+  login-account-agent.md         # manages frontend/observations_laptop.html's login accounts
   artifact-publish-agent.md      # publishes/refreshes a dashboard as a Claude Artifact
   doc-keeper-agent.md            # syncs Planning.md/memory.md/Decision.md after a change
 ```
 
-## dashboard.html — Current State (as of 2026-06-29)
+## frontend/dashboard.html — Current State (as of 2026-06-29)
 
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\dashboard.html`
+- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\frontend/dashboard.html`
 - **Title:** "Teacher Observation Score History" (renamed from "Teacher Observation Dashboard")
 - **School selector** at the top: dropdown filters the entire page to one school or all schools.
 - **KPI cards:** Teachers shown, observation average, Improving / Steady / Declining counts.
@@ -45,12 +47,12 @@ ask/                        # one-page + small server: password-gated Claude Q&A
 - **Offline:** No CDN. Works by double-clicking.
 - **No login system.**
 - **Data:** original 30-teacher / 6-school dataset — was NOT included in the 2026-06-30 refresh
-  to 120 teachers / 12 schools that `observations.html` and `observations_laptop.html` received.
+  to 120 teachers / 12 schools that `frontend/observations.html` and `frontend/observations_laptop.html` received.
 
-## observations.html — Mobile UI (as of 2026-06-29)
+## frontend/observations.html — Mobile UI (as of 2026-06-29)
 
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\observations.html`
-- **Purpose:** Android-style mobile UI (Material Design 3). Separate from `dashboard.html` — phone-first, portrait only.
+- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\frontend/observations.html`
+- **Purpose:** Android-style mobile UI (Material Design 3). Separate from `frontend/dashboard.html` — phone-first, portrait only.
 - **Requires internet once** to load Google Roboto font and Material Icons from CDN.
 - **Color scheme:** Dark green — primary `#1b5e20` (changed from original blue `#1a56a4`).
 - **Three screens:**
@@ -61,10 +63,10 @@ ask/                        # one-page + small server: password-gated Claude Q&A
 - **Max-width:** 430px centred — looks like a phone on desktop too.
 - **No login system.**
 
-## observations_laptop.html — Laptop Dashboard (verified against source 2026-08-21)
+## frontend/observations_laptop.html — Laptop Dashboard (verified against source 2026-08-21)
 
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\observations_laptop.html`
-- **Purpose:** Full-featured desktop/laptop dashboard. Separate from `dashboard.html` and `observations.html`, and the most feature-complete of the three — well ahead of what the old `Memory.md` had documented (this section was re-verified directly against the file's source, not carried over from the stale doc).
+- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\frontend/observations_laptop.html`
+- **Purpose:** Full-featured desktop/laptop dashboard. Separate from `frontend/dashboard.html` and `frontend/observations.html`, and the most feature-complete of the three — well ahead of what the old `Memory.md` had documented (this section was re-verified directly against the file's source, not carried over from the stale doc).
 - **Design identity:** Forest green sidebar (`#1b5e20`) + amber active-selection accent (`#e8a217`). Sage-green background (`#f5f9f5`).
 - **Login system:** Full-screen login overlay, three roles — `coach`, `principal`, `admin` — shown as role pills in the UI.
   - Login credentials → see **Login Credentials** below.
@@ -88,7 +90,7 @@ ask/                        # one-page + small server: password-gated Claude Q&A
   boxes with indicators + CPD recommendation).
 - **Interaction:** Click teacher → loads detail; click again → deselects. School dropdown resets selection.
 
-### Login Credentials (observations_laptop.html)
+### Login Credentials (frontend/observations_laptop.html)
 
 All stored in `USER_DB` constant in the JS — passwords are simple (`123` / `admin`), visible in
 source (client-side only — security by effort, not encryption). 8 coaches, each covering one or
@@ -108,7 +110,7 @@ school; 1 admin (sees everything).
 | `admin` | `admin` | admin | All schools |
 | `principal <school>` | `123` | principal | One school each — key is `principal` + a lowercase school slug (e.g. `principal alnoor`, `principal brightfuture`, … all 14 schools) |
 
-### School Codes (observations_laptop.html)
+### School Codes (frontend/observations_laptop.html)
 
 `SCHOOL_CODES` constant — 14 entries, one per school (used to unlock/reference a school by code):
 
@@ -129,38 +131,45 @@ school; 1 admin (sees everything).
 | `MPS` | Minhaj Public School |
 | `NHS` | New Horizon School |
 
-## ask/ — One-page Q&A tool + small server (added 2026-09-29)
+## frontend/ + backend/ — the deployable app (reorganized 2026-09-29, see `Decision.md` ADR-005)
 
-- **Purpose:** unrelated to the observation dashboards — a small standalone tool: one page
-  (password box → box/button/answer), backed by a small Node server that calls the Claude API
-  server-side so the Anthropic API key never reaches the browser.
-- **Why a server at all:** this is the one component in the project that can't be a static
-  file — the API key must stay server-side (see `Decision.md` ADR-004).
-- **Stack:** zero-dependency Node.js (`http`/`https`/`crypto`/`fs` built-ins only, no `npm
-  install`, no `package.json`).
-- **Auth:** single shared password (`APP_PASSWORD` env var), constant-time compared
-  (`crypto.timingSafeEqual`). On success, a random session token is stored server-side
+- **Purpose:** `frontend/` holds every served HTML file (the three dashboards, unchanged, plus
+  `ask.html` — box/button/answer, password login form). `backend/server.js` is the one
+  deployable unit: a single Node process that serves all of `frontend/` as static files *and*
+  runs the Ask tool's API, so the whole project ships as one process with one public URL.
+- **Why a server at all:** the Ask tool's Anthropic API key must stay server-side — it's the one
+  component in the project that can't be a plain static file (see `Decision.md` ADR-004).
+  ADR-005 records *why* it was pulled out into `backend/` + `frontend/` instead of staying a
+  one-off `ask/` folder bolted on next to the dashboards.
+- **Stack:** zero-dependency Node.js (`http`/`https`/`crypto`/`fs` built-ins only). `backend/
+  package.json` exists only so deploy platforms detect it as a Node app and know `npm start` —
+  there is still nothing to `npm install`.
+- **Routing (`backend/server.js`):** `GET /` → a small landing page linking to all four
+  frontend pages. `GET /dashboard.html`, `/observations.html`, `/observations_laptop.html`,
+  `/ask.html` → served straight from `frontend/`, unauthenticated, unchanged from before the
+  reorg. `GET /me`, `POST /login`, `POST /logout`, `POST /ask` → the Ask tool's API — only
+  `/ask` requires a valid session; the dashboards keep whatever auth (or lack of it) they
+  already had (`observations_laptop.html`'s own client-side login is separate and unaffected).
+- **Auth (Ask tool only):** single shared password (`APP_PASSWORD` env var), constant-time
+  compared (`crypto.timingSafeEqual`). On success, a random session token is stored server-side
   (in-memory `Set` — resets on server restart, fine for a single personal user) and handed to
   the browser as an `HttpOnly`, `SameSite=Strict` cookie.
-- **Endpoints:** `GET /` (the page), `GET /me` (`{authed}`, used by the page on load), `POST
-  /login`, `POST /logout`, `POST /ask` (requires a valid session; calls the Anthropic Messages
-  API with `ANTHROPIC_API_KEY` server-side, returns `{answer}`).
-- **Config:** copy `ask/.env.example` to `ask/.env` (gitignored) and fill in `APP_PASSWORD`,
-  `ANTHROPIC_API_KEY`, optionally `ANTHROPIC_MODEL` (default `claude-sonnet-5`) and `PORT`
-  (default `8787`).
-- **Run it:** `node ask/server.js`, then open `http://localhost:8787`.
-- **Verified 2026-09-29:** full request cycle tested end-to-end with a fake API key — wrong
-  password → 401, `/ask` without a session → 401, correct login → session cookie + `/me` →
-  `authed:true`, `/ask` with session correctly reached `api.anthropic.com` and surfaced
-  Anthropic's own "API key is invalid" error as a clean `502` rather than crashing, logout
-  correctly invalidated the session. Not yet tested with a real Anthropic API key/response.
-- **Node.js was not installed on this machine** before this task — installed via
+- **Config:** copy `backend/.env.example` to `backend/.env` (gitignored) and fill in
+  `APP_PASSWORD`, `ANTHROPIC_API_KEY`, optionally `ANTHROPIC_MODEL` (default
+  `claude-sonnet-5`) and `PORT` (default `8787`).
+- **Run it:** `node backend/server.js` (or `npm start` from `backend/`), then open
+  `http://localhost:8787`.
+- **Verified 2026-09-29:** after the reorg, re-tested end-to-end — `/`, `/dashboard.html`,
+  `/observations.html`, `/observations_laptop.html`, `/ask.html` all serve with byte-for-byte
+  matching content to the pre-reorg files; login/session/ask/logout cycle unchanged (still uses
+  a fake API key — the real-answer success path is still unverified, see `Planning.md`).
+- **Node.js was not installed on this machine** before ADR-004's task — installed via
   `winget install OpenJS.NodeJS.LTS` (v24.19.0) with the user's confirmation.
 
 ## Note on dataset drift
 
-`dashboard.html` still embeds the original 30-teacher / 6-school dataset (verified in its school
+`frontend/dashboard.html` still embeds the original 30-teacher / 6-school dataset (verified in its school
 dropdown: only Al-Noor, Bright Future, City Grammar, Daanish, Evergreen, Falcon — the 6 new
-schools from the 2026-06-30 Google Sheet refresh are missing). `observations.html` and
-`observations_laptop.html` are both current with 120 teachers / 12 schools. This is a known
+schools from the 2026-06-30 Google Sheet refresh are missing). `frontend/observations.html` and
+`frontend/observations_laptop.html` are both current with 120 teachers / 12 schools. This is a known
 inconsistency (see `Planning.md`), not yet requested to be fixed.

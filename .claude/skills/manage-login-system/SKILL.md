@@ -1,12 +1,12 @@
 ---
 name: manage-login-system
-description: Use when adding, removing, or modifying login accounts, roles, or school codes in observations_laptop.html — the only one of the three dashboard files with a login system.
+description: Use when adding, removing, or modifying login accounts, roles, or school codes in frontend/observations_laptop.html — the only one of the three dashboard files with a login system.
 ---
 
-# Managing the Login System (observations_laptop.html only)
+# Managing the Login System (frontend/observations_laptop.html only)
 
-`dashboard.html` and `observations.html` have **no login system** — this skill only applies to
-`observations_laptop.html`.
+`frontend/dashboard.html` and `frontend/observations.html` have **no login system** — this skill only applies to
+`frontend/observations_laptop.html`.
 
 ## Where it lives
 

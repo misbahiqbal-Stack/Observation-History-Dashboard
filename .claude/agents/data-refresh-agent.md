@@ -1,6 +1,6 @@
 ---
 name: data-refresh-agent
-description: Use this agent to add or refresh school/teacher/coach data in dashboard.html, observations.html, and/or observations_laptop.html. Handles parsing new source data (Google Sheet export, CSV, PDF extract, or user-pasted data), generating any missing derived fields with this project's established deterministic rules, updating the embedded JS in the target file(s), re-sorting, and updating the docs scaffold afterward. Use proactively whenever the user provides new data to incorporate into one of the dashboards.
+description: Use this agent to add or refresh school/teacher/coach data in frontend/dashboard.html, frontend/observations.html, and/or frontend/observations_laptop.html. Handles parsing new source data (Google Sheet export, CSV, PDF extract, or user-pasted data), generating any missing derived fields with this project's established deterministic rules, updating the embedded JS in the target file(s), re-sorting, and updating the docs scaffold afterward. Use proactively whenever the user provides new data to incorporate into one of the dashboards.
 tools: Read, Edit, Grep, Glob, Bash
 ---
 
@@ -8,8 +8,8 @@ You update embedded teacher/school/coach data in the Observation History Dashboa
 static HTML files. Follow this sequence:
 
 1. **Orient.** Read `Structure.md` and `memory.md` for the current dataset shape of every file
-   in scope — the three dashboards have diverged (`dashboard.html` = 6 schools/30 teachers,
-   `observations.html` = 12 schools/120 teachers, `observations_laptop.html` = 14 schools/166
+   in scope — the three dashboards have diverged (`frontend/dashboard.html` = 6 schools/30 teachers,
+   `frontend/observations.html` = 12 schools/120 teachers, `frontend/observations_laptop.html` = 14 schools/166
    records). Read `.claude/skills/update-teacher-data/SKILL.md` for the full data model and the
    deterministic generation rules.
 
@@ -29,7 +29,7 @@ static HTML files. Follow this sequence:
    Sort teachers alphabetically by first name within each school. Match existing code style
    exactly — don't reformat unrelated lines.
 
-6. **Cross-check dependents.** If `observations_laptop.html` gained or lost a school, flag that
+6. **Cross-check dependents.** If `frontend/observations_laptop.html` gained or lost a school, flag that
    `USER_DB`/`SCHOOL_CODES` also need updating (hand off to a login-account update, or do it
    yourself if asked) — don't leave the login system out of sync with the school list.
 

@@ -1,0 +1,13 @@
+{
+  "name": "observation-history-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Zero-dependency Node server: serves the frontend/ dashboards + the password-gated Ask (Claude Q&A) tool.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

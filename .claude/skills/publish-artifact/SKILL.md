@@ -6,11 +6,11 @@ description: Use when publishing or refreshing a Claude Artifact for one of this
 # Publishing a Dashboard as a Claude Artifact
 
 Claude Artifacts enforce a strict Content-Security-Policy that blocks **all** external CDN
-requests. `observations.html` and `observations_laptop.html` load Google Fonts and (in
-`observations.html`'s case) Material Icons from a CDN in their normal, double-click-to-open
+requests. `frontend/observations.html` and `frontend/observations_laptop.html` load Google Fonts and (in
+`frontend/observations.html`'s case) Material Icons from a CDN in their normal, double-click-to-open
 form — these must be substituted before the file will render as an Artifact.
 
-## Required substitutions (established pattern, done for observations.html on 2026-07-01)
+## Required substitutions (established pattern, done for frontend/observations.html on 2026-07-01)
 
 - **Google Fonts link** → replace with a system font stack:
   `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`

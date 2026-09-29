@@ -32,6 +32,36 @@ Copy the template below to the **top** of the log (newest first). Give each a se
 
 <!-- Newest entries on top. -->
 
+### ADR-005: Reorganize into frontend/ + backend/, one deployable app
+
+- **Date:** 2026-09-29
+- **Status:** Accepted
+- **Context:** After ADR-004 added `ask/` as a self-contained tool bolted on next to the three
+  standalone dashboard files, the user asked to deploy the project — which meant deciding what
+  "the project" actually is as a deployable unit. Four independent static files plus one
+  unrelated small server (each opened/run separately) isn't a single deployable thing.
+- **Decision:** Move all served HTML into `frontend/` (the three dashboards, byte-for-byte
+  unchanged, plus `ask/index.html` renamed to `ask.html`). Move the server into `backend/`,
+  extended to serve `frontend/`'s static files (`/dashboard.html`, `/observations.html`,
+  `/observations_laptop.html`, `/ask.html`, plus a small new landing page at `/` linking to all
+  four) in addition to its existing `/login`, `/logout`, `/me`, `/ask` API. Only `/ask` requires
+  a session — the dashboards keep exactly the auth (or lack of it) they had before; this reorg
+  does not add security requirements to content that didn't have them. Added `backend/
+  package.json` (`"start": "node server.js"`, zero dependencies) purely so deploy platforms
+  detect it as a Node app.
+- **Alternatives considered:** Leave the three dashboards as separately-hosted static files
+  (e.g. GitHub Pages) and deploy only `ask/` as its own service (rejected — the user asked to
+  deploy "this project" as one thing, and two deploy targets for one small project adds
+  complexity without a real benefit here); a bundler/build step to combine everything
+  (rejected — nothing in this project needs bundling; a single Node process serving static
+  files plus one API route doesn't justify one).
+- **Consequences:** One deployable unit, one process, one public URL, one place to set env
+  vars. Every path reference to the three dashboard files across `Structure.md`, `Claude.md`,
+  `.claude/skills/*`, and `.claude/agents/*` was updated to the `frontend/` prefix — re-verified
+  end-to-end locally (all four pages serve with matching content; login/session/ask/logout
+  cycle unchanged) before this ADR was written. Follow-up: actual deployment (hosting platform,
+  env var setup) is the next step, not yet done as of this entry.
+
 ### ADR-004: ask/ — a small Node server, breaking the "no build step" convention
 
 - **Date:** 2026-09-29

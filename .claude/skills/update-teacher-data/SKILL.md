@@ -1,6 +1,6 @@
 ---
 name: update-teacher-data
-description: Use when adding, refreshing, or reconciling school/teacher/coach data in dashboard.html, observations.html, or observations_laptop.html. Covers the deterministic rules for generating monthly/indicator scores when source data doesn't supply them, and what to update afterward.
+description: Use when adding, refreshing, or reconciling school/teacher/coach data in frontend/dashboard.html, frontend/observations.html, or frontend/observations_laptop.html. Covers the deterministic rules for generating monthly/indicator scores when source data doesn't supply them, and what to update afterward.
 ---
 
 # Updating Teacher/School Data
@@ -8,8 +8,8 @@ description: Use when adding, refreshing, or reconciling school/teacher/coach da
 ## Before touching any file
 
 1. Read `Structure.md` to confirm the **current** dataset shape of each target file — the three
-   dashboards have diverged (`dashboard.html` = 6 schools/30 teachers, `observations.html` = 12
-   schools/120 teachers, `observations_laptop.html` = 14 schools/166 records). Don't assume a
+   dashboards have diverged (`frontend/dashboard.html` = 6 schools/30 teachers, `frontend/observations.html` = 12
+   schools/120 teachers, `frontend/observations_laptop.html` = 14 schools/166 records). Don't assume a
    change to one applies to the others.
 2. Confirm with the user **which file(s)** are in scope. Read the new source data back to them
    before building — this project's history is full of corrections caught this way (see
@@ -19,7 +19,7 @@ description: Use when adding, refreshing, or reconciling school/teacher/coach da
 
 Each embedded record needs:
 - `school`, `name` (append `(N subjects)` to the name if the teacher covers multiple subjects —
-  only `observations_laptop.html` uses this)
+  only `frontend/observations_laptop.html` uses this)
 - `months` — 6 values, Sept→Feb, one overall score per visit. Use `null` for a missing visit,
   never `0`.
 - `obsAvg` — average of the 6 monthly scores (or taken directly from source if provided)
@@ -47,9 +47,9 @@ real data when available, and tell the user explicitly which fields were generat
 
 ## Indicator names differ by file
 
-- `dashboard.html` / `observations.html`: Lesson Objective Clarity, Student Engagement,
+- `frontend/dashboard.html` / `frontend/observations.html`: Lesson Objective Clarity, Student Engagement,
   Classroom Management, Differentiated Instruction.
-- `observations_laptop.html`: Objective Clarity, Student Engagement, Class Management,
+- `frontend/observations_laptop.html`: Objective Clarity, Student Engagement, Class Management,
   **Instructional Quality** (not the same as "Differentiated Instruction" — a real content
   difference, not a renaming typo).
 
@@ -57,7 +57,7 @@ real data when available, and tell the user explicitly which fields were generat
 
 1. Sort teachers alphabetically by first name within each school (established convention).
 2. Update the school dropdown / `TEACHER_LIST` / `USER_DB`-adjacent structures as needed if
-   schools were added or removed (see `manage-login-system` skill if `observations_laptop.html`
+   schools were added or removed (see `manage-login-system` skill if `frontend/observations_laptop.html`
    is affected — new schools need principal accounts + a school code).
 3. Update `Structure.md`'s per-file section with the new counts/schools.
 4. Add a dated entry to `memory.md` → "Session History" describing what changed and whether

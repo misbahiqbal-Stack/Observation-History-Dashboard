@@ -4,8 +4,9 @@
 > every session.
 
 **Observation History Dashboard** — teacher classroom observation tracking (World Bank Teach
-Tool), three dashboard files, active development. Full purpose / stack / conventions / common
-tasks / gotchas: `.claude/skills/project-overview/SKILL.md`.
+Tool), plus a password-gated Claude Q&A tool. One deployable app: `backend/server.js` serves
+everything in `frontend/`. Full purpose / stack / conventions / common tasks / gotchas:
+`.claude/skills/project-overview/SKILL.md`.
 
 ## Where things live
 
@@ -19,17 +20,22 @@ tasks / gotchas: `.claude/skills/project-overview/SKILL.md`.
 | Architectural decisions (ADR log) | `Decision.md` |
 | Task-specific playbooks (data refresh, login system, artifact publishing) | `.claude/skills/*/SKILL.md` |
 | Custom subagents for repetitive workflows | `.claude/agents/*.md` |
-| One-page Q&A tool + its small backend server (needs Node) | `ask/` (see `Structure.md`) |
 
 ```
-dashboard.html              # desktop dashboard, no login
-observations.html           # mobile UI, no login
-observations_laptop.html    # full desktop dashboard, login system
-ask/                        # one-page + small server: password-gated Claude Q&A tool
+frontend/                  # all served HTML — static, no build step
+  dashboard.html              # desktop dashboard, no login
+  observations.html           # mobile UI, no login
+  observations_laptop.html    # full desktop dashboard, login system
+  ask.html                     # box + button + answer, password login form
+backend/                   # the one deployable unit
+  server.js                   # zero-dependency Node server: static files + Ask API
+  package.json                 # "start": "node server.js" — no dependencies
 ```
 
 ## Commands
 
-No build/install/test tooling for the three dashboard files — self-contained HTML, opened
-directly in a browser. `ask/` is the one exception: it needs Node.js (`node ask/server.js`) —
-see `Structure.md` for setup.
+- **Dashboards** (`frontend/*.html`): no build/install/test tooling — but now normally served
+  by `backend/server.js` rather than opened by double-clicking (see `Structure.md`).
+- **Run the app:** `cd backend && npm start` (or `node server.js`), then open
+  `http://localhost:8787`. Needs `backend/.env` — copy from `.env.example` first.
+- **Deploy:** see `Structure.md` / `Decision.md` ADR-005 for the current setup.

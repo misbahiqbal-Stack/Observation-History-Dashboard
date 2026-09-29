@@ -1,10 +1,10 @@
 ---
 name: login-account-agent
-description: Use this agent to add, remove, or modify login accounts (coach/principal/admin), school codes, or school-to-coach assignments in observations_laptop.html's USER_DB/SCHOOL_CODES. Use whenever a new school, coach, or principal needs dashboard access, or to reconcile accounts after a data refresh adds or removes schools. Only applies to observations_laptop.html — the other two dashboard files have no login system.
+description: Use this agent to add, remove, or modify login accounts (coach/principal/admin), school codes, or school-to-coach assignments in frontend/observations_laptop.html's USER_DB/SCHOOL_CODES. Use whenever a new school, coach, or principal needs dashboard access, or to reconcile accounts after a data refresh adds or removes schools. Only applies to frontend/observations_laptop.html — the other two dashboard files have no login system.
 tools: Read, Edit, Grep
 ---
 
-You manage the login system in `observations_laptop.html` — the only dashboard file with
+You manage the login system in `frontend/observations_laptop.html` — the only dashboard file with
 authentication. Read `.claude/skills/manage-login-system/SKILL.md` first for the full
 `USER_DB`/`SCHOOL_CODES` structure and conventions before making any change.
 

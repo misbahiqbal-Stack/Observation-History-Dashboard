@@ -19,8 +19,8 @@ building.
 - **Language:** HTML + CSS + vanilla JavaScript. No build step, no package manager, no framework.
 - **Charts:** hand-rolled inline SVG — no charting library.
 - **Data:** embedded directly in each file's JS as arrays/objects (no backend, no database).
-- **Fonts/icons:** system font stack by default; `observations.html` and
-  `observations_laptop.html` optionally load Google Fonts / Material Icons from a CDN — this
+- **Fonts/icons:** system font stack by default; `frontend/observations.html` and
+  `frontend/observations_laptop.html` optionally load Google Fonts / Material Icons from a CDN — this
   breaks under Claude Artifact's CSP, see the `publish-artifact` skill for the fix.
 - **Hosting:** none required — files run by double-clicking, or published as read-only Claude
   Artifacts for sharing.
@@ -29,9 +29,9 @@ building.
 
 | File | Role |
 |---|---|
-| `dashboard.html` | Desktop dashboard. No login. **Stale dataset**: 6 schools / 30 teachers (original). |
-| `observations.html` | Mobile (Material Design) UI. No login. 12 schools / 120 teachers. |
-| `observations_laptop.html` | Full-featured desktop dashboard. **Only file with login** (coach/principal/admin roles). Most advanced: 14 schools / 166 teacher records, multi-subject teachers, CPD recommendations. |
+| `frontend/dashboard.html` | Desktop dashboard. No login. **Stale dataset**: 6 schools / 30 teachers (original). |
+| `frontend/observations.html` | Mobile (Material Design) UI. No login. 12 schools / 120 teachers. |
+| `frontend/observations_laptop.html` | Full-featured desktop dashboard. **Only file with login** (coach/principal/admin roles). Most advanced: 14 schools / 166 teacher records, multi-subject teachers, CPD recommendations. |
 | `Claude.md` | Persistent instructions (loaded every session). |
 | `Agent_loop.md` | The agent's operating loop + guardrails for this project. |
 | `memory.md` | Durable facts, conventions, rejected approaches, session history, auto version log. |
@@ -59,7 +59,7 @@ bug once (see `Decision.md` / `memory.md` session history, 2026-08-21).
 ## Common tasks (and where to go for each)
 
 - **Add/update school, teacher, or coach data** → `update-teacher-data` skill / `data-refresh-agent`.
-- **Add or change a login account, role, or school code** (`observations_laptop.html` only) →
+- **Add or change a login account, role, or school code** (`frontend/observations_laptop.html` only) →
   `manage-login-system` skill / `login-account-agent`.
 - **Publish or refresh a Claude Artifact** for one of the dashboards → `publish-artifact` skill
   / `artifact-publish-agent`.
@@ -70,12 +70,12 @@ bug once (see `Decision.md` / `memory.md` session history, 2026-08-21).
 
 1. **Three dashboards, three datasets.** Never assume a data change to one file applies to the
    others — confirm with the user which file(s) are in scope.
-2. **`dashboard.html`'s desktop layout must not be changed to a mobile/card layout** — this was
+2. **`frontend/dashboard.html`'s desktop layout must not be changed to a mobile/card layout** — this was
    tried and explicitly rejected by the user once already.
-3. **`observations_laptop.html`'s 4th indicator is "Instructional Quality"**, not "Differentiated
+3. **`frontend/observations_laptop.html`'s 4th indicator is "Instructional Quality"**, not "Differentiated
    Instruction" like the other two files — a real content difference, not a typo.
 4. **Passwords are plain-text in source** across all login accounts in
-   `observations_laptop.html` (`123` / `admin`). This is an accepted tradeoff for a
+   `frontend/observations_laptop.html` (`123` / `admin`). This is an accepted tradeoff for a
    client-side-only static file, not an oversight — don't "fix" it without asking.
 5. **A PostToolUse hook auto-appends a `## Version N` entry to `memory.md`** on every
    Write/Edit in this project (except to `memory.md` itself). Don't hand-edit those entries;

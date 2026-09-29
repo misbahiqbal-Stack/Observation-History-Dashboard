@@ -19,13 +19,39 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
 
 if (!APP_PASSWORD) {
-  console.error('Missing APP_PASSWORD in ask/.env. Refusing to start.');
+  console.error('Missing APP_PASSWORD in backend/.env. Refusing to start.');
   process.exit(1);
 }
 if (!ANTHROPIC_API_KEY) {
-  console.error('Missing ANTHROPIC_API_KEY in ask/.env. Refusing to start.');
+  console.error('Missing ANTHROPIC_API_KEY in backend/.env. Refusing to start.');
   process.exit(1);
 }
+
+const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
+
+const STATIC_FILES = {
+  '/dashboard.html': 'dashboard.html',
+  '/observations.html': 'observations.html',
+  '/observations_laptop.html': 'observations_laptop.html',
+  '/ask.html': 'ask.html',
+};
+
+const LANDING_PAGE = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><title>Observation History Dashboard</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f9f9f7; color: #0b0b0b; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { max-width: 420px; padding: 28px; background: #fcfcfb; border: 1px solid rgba(11,11,11,0.12); border-radius: 12px; }
+  h1 { font-size: 18px; margin: 0 0 16px; }
+  a { display: block; padding: 10px 0; color: #2a78d6; text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
+</style></head>
+<body><div class="card">
+  <h1>Observation History Dashboard</h1>
+  <a href="/dashboard.html">Desktop dashboard</a>
+  <a href="/observations.html">Mobile UI</a>
+  <a href="/observations_laptop.html">Laptop dashboard (login)</a>
+  <a href="/ask.html">Ask (Claude Q&amp;A)</a>
+</div></body></html>`;
 
 const sessions = new Set();
 
@@ -112,7 +138,12 @@ function askClaude(question) {
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/') {
-      const html = fs.readFileSync(path.join(__dirname, 'index.html'));
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      return res.end(LANDING_PAGE);
+    }
+
+    if (req.method === 'GET' && STATIC_FILES[req.url]) {
+      const html = fs.readFileSync(path.join(FRONTEND_DIR, STATIC_FILES[req.url]));
       res.writeHead(200, { 'Content-Type': 'text/html' });
       return res.end(html);
     }

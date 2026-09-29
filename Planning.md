@@ -6,17 +6,21 @@
 
 ## Current Goals
 
-- Keep the three dashboard files (`dashboard.html`, `observations.html`,
-  `observations_laptop.html`) accurate and in sync with the latest 12-school / 120-teacher
-  dataset (see `Structure.md`).
-- `observations_laptop.html` is the most feature-complete (login system, visit codes) — the
-  reference implementation to bring the other two files up to when features are added.
+- Deploy the app (frontend/ + backend/, ADR-005) — in progress, see the deployment task below.
+- Keep the three dashboard files (`frontend/dashboard.html`, `frontend/observations.html`,
+  `frontend/observations_laptop.html`) accurate and in sync with the latest 12-school /
+  120-teacher dataset (see `Structure.md`).
+- `frontend/observations_laptop.html` is the most feature-complete (login system, visit
+  codes) — the reference implementation to bring the other two files up to when features are
+  added.
 
 ## Open Tasks
 
-- [ ] `observations.html` has no login system (only `observations_laptop.html` does).
-- [ ] `dashboard.html` has no login system (only `observations_laptop.html` does).
-- [ ] All three dashboard files now have **different datasets** (verified 2026-08-21):
+- [ ] **Deploy the app** (ADR-005) — pick a host, set `APP_PASSWORD`/`ANTHROPIC_API_KEY` as
+  real environment variables there (never committed), confirm the live URL works end-to-end.
+- [ ] `frontend/observations.html` has no login system (only `observations_laptop.html` does).
+- [ ] `frontend/dashboard.html` has no login system (only `observations_laptop.html` does).
+- [ ] All three dashboard files still have **different datasets** (verified 2026-08-21):
   `dashboard.html` = 6 schools/30 teachers (original), `observations.html` = 12 schools/120
   teachers (2026-06-30 refresh), `observations_laptop.html` = 14 schools/166 records, 8
   multi-school coaches, principal+admin roles (furthest ahead, undocumented until now — see
@@ -26,10 +30,11 @@
 - [ ] No feedback yet from the user on the current desktop `dashboard.html` layout after the
   mobile-redesign revert (2026-06-24) — could resurface if the user wants further layout changes.
 - [ ] Potential future asks (not yet requested): more months of data, export/print views.
-- [ ] `ask/` (one-page Q&A tool, ADR-004) needs a real `ANTHROPIC_API_KEY` in `ask/.env` before
-  it can actually return an answer — only tested with a fake key so far (auth/error paths only).
-- [ ] `ask/`'s in-memory sessions reset on every server restart — fine for personal use, but
-  worth knowing if the server is ever left running unattended for long periods.
+- [ ] The Ask tool (ADR-004/005) needs a real `ANTHROPIC_API_KEY` in `backend/.env` (or the
+  deploy host's env vars) before it can actually return an answer — only tested with a fake
+  key so far (auth/error paths only, both before and after the frontend/backend reorg).
+- [ ] The Ask tool's in-memory sessions reset on every server restart/redeploy — fine for
+  personal use, but worth knowing, especially once deployed (a redeploy logs everyone out).
 
 ## How to use this file
 
