@@ -15,6 +15,10 @@ Planning.md                # open tasks / current goals
 dashboard.html              # desktop dashboard (no login)
 observations.html           # mobile UI (no login)
 observations_laptop.html    # full-featured desktop dashboard (has login)
+ask/                        # one-page + small server: password-gated Claude Q&A tool
+  index.html                  # box + button + answer, password login form
+  server.js                   # zero-dependency Node http server
+  .env.example                 # template — copy to .env, fill in real values (gitignored)
 .claude/skills/
   project-overview/SKILL.md      # purpose, stack, conventions, common tasks, gotchas
   update-teacher-data/SKILL.md   # data model + deterministic score-generation rules
@@ -124,6 +128,34 @@ school; 1 admin (sees everything).
 | `LA` | Lighthouse Academy |
 | `MPS` | Minhaj Public School |
 | `NHS` | New Horizon School |
+
+## ask/ — One-page Q&A tool + small server (added 2026-09-29)
+
+- **Purpose:** unrelated to the observation dashboards — a small standalone tool: one page
+  (password box → box/button/answer), backed by a small Node server that calls the Claude API
+  server-side so the Anthropic API key never reaches the browser.
+- **Why a server at all:** this is the one component in the project that can't be a static
+  file — the API key must stay server-side (see `Decision.md` ADR-004).
+- **Stack:** zero-dependency Node.js (`http`/`https`/`crypto`/`fs` built-ins only, no `npm
+  install`, no `package.json`).
+- **Auth:** single shared password (`APP_PASSWORD` env var), constant-time compared
+  (`crypto.timingSafeEqual`). On success, a random session token is stored server-side
+  (in-memory `Set` — resets on server restart, fine for a single personal user) and handed to
+  the browser as an `HttpOnly`, `SameSite=Strict` cookie.
+- **Endpoints:** `GET /` (the page), `GET /me` (`{authed}`, used by the page on load), `POST
+  /login`, `POST /logout`, `POST /ask` (requires a valid session; calls the Anthropic Messages
+  API with `ANTHROPIC_API_KEY` server-side, returns `{answer}`).
+- **Config:** copy `ask/.env.example` to `ask/.env` (gitignored) and fill in `APP_PASSWORD`,
+  `ANTHROPIC_API_KEY`, optionally `ANTHROPIC_MODEL` (default `claude-sonnet-5`) and `PORT`
+  (default `8787`).
+- **Run it:** `node ask/server.js`, then open `http://localhost:8787`.
+- **Verified 2026-09-29:** full request cycle tested end-to-end with a fake API key — wrong
+  password → 401, `/ask` without a session → 401, correct login → session cookie + `/me` →
+  `authed:true`, `/ask` with session correctly reached `api.anthropic.com` and surfaced
+  Anthropic's own "API key is invalid" error as a clean `502` rather than crashing, logout
+  correctly invalidated the session. Not yet tested with a real Anthropic API key/response.
+- **Node.js was not installed on this machine** before this task — installed via
+  `winget install OpenJS.NodeJS.LTS` (v24.19.0) with the user's confirmation.
 
 ## Note on dataset drift
 

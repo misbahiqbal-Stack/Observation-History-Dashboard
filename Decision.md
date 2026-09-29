@@ -32,6 +32,32 @@ Copy the template below to the **top** of the log (newest first). Give each a se
 
 <!-- Newest entries on top. -->
 
+### ADR-004: ask/ — a small Node server, breaking the "no build step" convention
+
+- **Date:** 2026-09-29
+- **Status:** Accepted
+- **Context:** User asked for a one-page tool (box, button, answer) that calls the Claude API,
+  gated by a login, with the API key kept server-side. A pure static HTML file cannot do this —
+  any API key embedded in client-side JS is visible to anyone who opens dev tools, unlike the
+  project's existing plain-text dashboard passwords (which are an accepted low-stakes tradeoff
+  for internal data, not a secret with external cost if leaked).
+- **Decision:** Add `ask/`, a small zero-dependency Node.js server (`http`/`https`/`crypto`/`fs`
+  built-ins only — no `npm install`, no `package.json`) that serves the one page, gates it with
+  a single shared password (env var, constant-time compared, session via `HttpOnly` cookie), and
+  proxies `/ask` to the Anthropic API using a server-side `ANTHROPIC_API_KEY` env var.
+- **Alternatives considered:** A static HTML file calling Anthropic directly from the browser
+  (rejected — would expose the API key to anyone viewing source); a full framework/build step
+  like Express + a bundler (rejected — overkill for one endpoint, and breaks the project's
+  otherwise-zero-tooling convention more than necessary); Python instead of Node (rejected only
+  because neither was installed and Node matches the project's existing JS-only skillset).
+- **Consequences:** This is now the one part of the project that requires a runtime (Node.js,
+  not installed on the dev machine before this — installed via `winget install
+  OpenJS.NodeJS.LTS`) and a running process, not just a double-clicked file. `ask/.env` (real
+  password + API key) must never be committed — gitignored; only `.env.example` (placeholder
+  values) is tracked. Follow-up: no real Anthropic API key has been used against it yet, so the
+  success path (an actual answer coming back) is unverified — only the auth/error paths were
+  tested end-to-end.
+
 ### ADR-003: Average of four indicators is the calculated "overall" score
 
 - **Date:** 2026-06-24

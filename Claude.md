@@ -19,13 +19,17 @@ tasks / gotchas: `.claude/skills/project-overview/SKILL.md`.
 | Architectural decisions (ADR log) | `Decision.md` |
 | Task-specific playbooks (data refresh, login system, artifact publishing) | `.claude/skills/*/SKILL.md` |
 | Custom subagents for repetitive workflows | `.claude/agents/*.md` |
+| One-page Q&A tool + its small backend server (needs Node) | `ask/` (see `Structure.md`) |
 
 ```
 dashboard.html              # desktop dashboard, no login
 observations.html           # mobile UI, no login
 observations_laptop.html    # full desktop dashboard, login system
+ask/                        # one-page + small server: password-gated Claude Q&A tool
 ```
 
 ## Commands
 
-No build/install/test tooling — self-contained HTML files, opened directly in a browser.
+No build/install/test tooling for the three dashboard files — self-contained HTML, opened
+directly in a browser. `ask/` is the one exception: it needs Node.js (`node ask/server.js`) —
+see `Structure.md` for setup.

@@ -26,6 +26,10 @@
 - [ ] No feedback yet from the user on the current desktop `dashboard.html` layout after the
   mobile-redesign revert (2026-06-24) — could resurface if the user wants further layout changes.
 - [ ] Potential future asks (not yet requested): more months of data, export/print views.
+- [ ] `ask/` (one-page Q&A tool, ADR-004) needs a real `ANTHROPIC_API_KEY` in `ask/.env` before
+  it can actually return an answer — only tested with a fake key so far (auth/error paths only).
+- [ ] `ask/`'s in-memory sessions reset on every server restart — fine for personal use, but
+  worth knowing if the server is ever left running unattended for long periods.
 
 ## How to use this file
 
