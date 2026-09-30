@@ -144,12 +144,15 @@ school; 1 admin (sees everything).
 - **Stack:** zero-dependency Node.js (`http`/`https`/`crypto`/`fs` built-ins only). `backend/
   package.json` exists only so deploy platforms detect it as a Node app and know `npm start` —
   there is still nothing to `npm install`.
-- **Routing (`backend/server.js`):** `GET /ask.html` is the only public GET route — it's the
-  login page. `GET /`, `/dashboard.html`, `/observations.html`, `/observations_laptop.html` all
-  require a valid session (see ADR-006) — an unauthenticated request 302s to
-  `/ask.html?next=<path>`, and logging in redirects straight back to it. `GET /me`, `POST
-  /login`, `POST /logout`, `POST /ask` are the auth/Ask API (`observations_laptop.html`'s own
-  separate client-side coach/principal/admin login still runs *behind* this gate, unaffected).
+- **Routing (`backend/server.js`):** `GET /ask.html` and `GET /health` are the only public GET
+  routes. `/ask.html` is the login page. `/health` (added 2026-09-30) always returns a plain
+  `200 ok` — deploy platforms ping this for their startup health check, since pinging `/` while
+  logged out would get a `302` and could get misread as "unhealthy," killing the deploy. `GET
+  /`, `/dashboard.html`, `/observations.html`, `/observations_laptop.html` all require a valid
+  session (see ADR-006) — an unauthenticated request 302s to `/ask.html?next=<path>`, and
+  logging in redirects straight back to it. `GET /me`, `POST /login`, `POST /logout`, `POST
+  /ask` are the auth/Ask API (`observations_laptop.html`'s own separate client-side
+  coach/principal/admin login still runs *behind* this gate, unaffected).
 - **Auth (whole app, ADR-006):** single shared password (`APP_PASSWORD` env var), constant-time
   compared (`crypto.timingSafeEqual`). On success, a random session token is stored server-side
   (in-memory `Set` — resets on server restart/redeploy, fine for a single personal user) and

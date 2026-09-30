@@ -144,6 +144,11 @@ function askClaude(question) {
 
 const server = http.createServer(async (req, res) => {
   try {
+    if (req.method === 'GET' && req.url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      return res.end('ok');
+    }
+
     if (req.method === 'GET' && req.url === '/') {
       if (!isAuthed(req)) return redirectToLogin(res, '/');
       res.writeHead(200, { 'Content-Type': 'text/html' });
