@@ -32,6 +32,29 @@ Copy the template below to the **top** of the log (newest first). Give each a se
 
 <!-- Newest entries on top. -->
 
+### ADR-008: Fix route matching to strip the query string (bug from ADR-006)
+
+- **Date:** 2026-09-30
+- **Status:** Accepted
+- **Context:** Live on Railway, every unauthenticated visit returned a plain-text "Not found"
+  instead of the login page. Cause: `server.js` matched routes with exact string equality
+  against Node's raw `req.url`, which includes the query string. ADR-006's own redirect sends
+  browsers to `/ask.html?next=<path>` — a URL that could never match the `/ask.html` route
+  entry, since `req.url` there is literally `/ask.html?next=...`, not `/ask.html`. Every
+  unauthenticated visit hits this path (`redirectToLogin` always appends `?next=`), so this
+  broke the login flow for anyone, not an edge case. Caught only once deployed — local testing
+  after ADR-006 exercised `/ask.html` on its own but never `/ask.html?next=...`, the exact URL
+  the app's own redirect produces.
+- **Decision:** Derive `pathname = req.url.split('?')[0]` once at the top of the request
+  handler and match every route against `pathname` instead of raw `req.url`.
+- **Alternatives considered:** Using Node's `url.parse()`/`URL` class instead of a manual split
+  (rejected as unnecessary — nothing here needs query-string parsing server-side, `next` is
+  only ever read client-side in `ask.html` via `URLSearchParams`; a plain split is sufficient
+  and keeps the zero-dependency, minimal-surface style of this file).
+- **Consequences:** Login flow works end-to-end again. Lesson for next time (see `Agent_loop.md`
+  / testing habits): when a handler redirects to a URL with a query string, the test suite must
+  hit that exact URL — testing the bare path isn't equivalent and let this ship.
+
 ### ADR-007: Don't require ANTHROPIC_API_KEY to start the server
 
 - **Date:** 2026-09-30

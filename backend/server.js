@@ -144,35 +144,37 @@ function askClaude(question) {
 
 const server = http.createServer(async (req, res) => {
   try {
-    if (req.method === 'GET' && req.url === '/health') {
+    const pathname = req.url.split('?')[0];
+
+    if (req.method === 'GET' && pathname === '/health') {
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       return res.end('ok');
     }
 
-    if (req.method === 'GET' && req.url === '/') {
+    if (req.method === 'GET' && pathname === '/') {
       if (!isAuthed(req)) return redirectToLogin(res, '/');
       res.writeHead(200, { 'Content-Type': 'text/html' });
       return res.end(LANDING_PAGE);
     }
 
-    if (req.method === 'GET' && GATED_FILES[req.url]) {
-      if (!isAuthed(req)) return redirectToLogin(res, req.url);
-      const html = fs.readFileSync(path.join(FRONTEND_DIR, GATED_FILES[req.url]));
+    if (req.method === 'GET' && GATED_FILES[pathname]) {
+      if (!isAuthed(req)) return redirectToLogin(res, pathname);
+      const html = fs.readFileSync(path.join(FRONTEND_DIR, GATED_FILES[pathname]));
       res.writeHead(200, { 'Content-Type': 'text/html' });
       return res.end(html);
     }
 
-    if (req.method === 'GET' && PUBLIC_FILES[req.url]) {
-      const html = fs.readFileSync(path.join(FRONTEND_DIR, PUBLIC_FILES[req.url]));
+    if (req.method === 'GET' && PUBLIC_FILES[pathname]) {
+      const html = fs.readFileSync(path.join(FRONTEND_DIR, PUBLIC_FILES[pathname]));
       res.writeHead(200, { 'Content-Type': 'text/html' });
       return res.end(html);
     }
 
-    if (req.method === 'GET' && req.url === '/me') {
+    if (req.method === 'GET' && pathname === '/me') {
       return send(res, 200, { authed: isAuthed(req) });
     }
 
-    if (req.method === 'POST' && req.url === '/login') {
+    if (req.method === 'POST' && pathname === '/login') {
       const body = await readBody(req);
       let password;
       try { ({ password } = JSON.parse(body || '{}')); } catch (e) { password = undefined; }
@@ -184,13 +186,13 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { ok: true }, { 'Set-Cookie': `session=${token}; HttpOnly; SameSite=Strict; Path=/` });
     }
 
-    if (req.method === 'POST' && req.url === '/logout') {
+    if (req.method === 'POST' && pathname === '/logout') {
       const cookies = parseCookies(req);
       sessions.delete(cookies.session);
       return send(res, 200, { ok: true }, { 'Set-Cookie': 'session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' });
     }
 
-    if (req.method === 'POST' && req.url === '/ask') {
+    if (req.method === 'POST' && pathname === '/ask') {
       if (!isAuthed(req)) return send(res, 401, { error: 'Not logged in' });
       if (!ANTHROPIC_API_KEY) {
         return send(res, 503, { error: 'Ask tool is not configured yet — ANTHROPIC_API_KEY is missing.' });
