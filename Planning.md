@@ -16,8 +16,9 @@
 
 ## Open Tasks
 
-- [ ] **Deploy the app** (ADR-005) — pick a host, set `APP_PASSWORD`/`ANTHROPIC_API_KEY` as
-  real environment variables there (never committed), confirm the live URL works end-to-end.
+- [ ] **Deploy the app** (ADR-005/006/007) — in progress on Railway. `APP_PASSWORD` is the only
+  required env var to get a working deploy (dashboards + login); confirm the live URL works
+  end-to-end once `ANTHROPIC_API_KEY` is added too (see below).
 - [ ] `frontend/observations.html` has no login system (only `observations_laptop.html` does).
 - [ ] `frontend/dashboard.html` has no login system (only `observations_laptop.html` does).
 - [ ] All three dashboard files still have **different datasets** (verified 2026-08-21):

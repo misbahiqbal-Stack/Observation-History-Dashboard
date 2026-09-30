@@ -23,8 +23,8 @@ if (!APP_PASSWORD) {
   process.exit(1);
 }
 if (!ANTHROPIC_API_KEY) {
-  console.error('Missing ANTHROPIC_API_KEY in backend/.env. Refusing to start.');
-  process.exit(1);
+  console.warn('Missing ANTHROPIC_API_KEY — dashboards and login will work, but /ask will ' +
+    'return "not configured" until it is set.');
 }
 
 const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
@@ -192,6 +192,9 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && req.url === '/ask') {
       if (!isAuthed(req)) return send(res, 401, { error: 'Not logged in' });
+      if (!ANTHROPIC_API_KEY) {
+        return send(res, 503, { error: 'Ask tool is not configured yet — ANTHROPIC_API_KEY is missing.' });
+      }
       const body = await readBody(req);
       let question;
       try { ({ question } = JSON.parse(body || '{}')); } catch (e) { question = undefined; }

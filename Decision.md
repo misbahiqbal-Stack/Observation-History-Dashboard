@@ -32,6 +32,30 @@ Copy the template below to the **top** of the log (newest first). Give each a se
 
 <!-- Newest entries on top. -->
 
+### ADR-007: Don't require ANTHROPIC_API_KEY to start the server
+
+- **Date:** 2026-09-30
+- **Status:** Accepted
+- **Context:** ADR-004 made the server refuse to start (`process.exit(1)`) without
+  `ANTHROPIC_API_KEY`. During first deployment (Railway), the user hadn't created an Anthropic
+  Console key yet (a separate billing setup from the app's own hosting) — the missing key was
+  blocking the *entire* app, including the dashboards and login, which don't use it at all.
+- **Decision:** Only `APP_PASSWORD` is required to start. A missing `ANTHROPIC_API_KEY` now
+  logs a warning instead of exiting; the `/ask` route itself checks for the key and returns a
+  clean `503 { error: "Ask tool is not configured yet..." }` if it's absent, instead of the
+  whole server failing to boot.
+- **Alternatives considered:** Switching the Ask tool to a different provider to sidestep
+  Anthropic's billing setup (rejected for now — the user chose Claude explicitly when this was
+  planned, and other providers' free tiers aren't guaranteed to avoid the same billing-signup
+  friction; revisit only if asked); making the key genuinely optional forever (rejected — the
+  Ask feature's entire purpose requires *some* LLM API key, this ADR just stops it from taking
+  the rest of the app down while that key isn't set yet).
+- **Consequences:** The dashboards and login can deploy and work immediately without any
+  Anthropic account. The Ask tool stays visibly broken (clear error, not a crash) until
+  `ANTHROPIC_API_KEY` is added later. Re-verified locally: server starts with only
+  `APP_PASSWORD` set, `/health`, login, and all three dashboards work; `/ask` returns a clean
+  `503` instead of attempting a doomed API call.
+
 ### ADR-006: Gate every dashboard route behind the shared session, not just /ask
 
 - **Date:** 2026-09-29
