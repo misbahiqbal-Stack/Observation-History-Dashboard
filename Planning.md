@@ -6,21 +6,24 @@
 
 ## Current Goals
 
-- Deploy the app (frontend/ + backend/, ADR-005) — in progress, see the deployment task below.
-- Keep the three dashboard files (`frontend/dashboard.html`, `frontend/observations.html`,
-  `frontend/observations_laptop.html`) accurate and in sync with the latest 12-school /
+- Deploy the app (one self-contained `backend/`, ADR-005/009) — in progress, see below.
+- Keep the three dashboard files (`backend/public/dashboard.html`, `backend/public/observations.html`,
+  `backend/public/observations_laptop.html`) accurate and in sync with the latest 12-school /
   120-teacher dataset (see `Structure.md`).
-- `frontend/observations_laptop.html` is the most feature-complete (login system, visit
+- `backend/public/observations_laptop.html` is the most feature-complete (login system, visit
   codes) — the reference implementation to bring the other two files up to when features are
   added.
 
 ## Open Tasks
 
-- [ ] **Deploy the app** (ADR-005/006/007) — in progress on Railway. `APP_PASSWORD` is the only
-  required env var to get a working deploy (dashboards + login); confirm the live URL works
-  end-to-end once `ANTHROPIC_API_KEY` is added too (see below).
-- [ ] `frontend/observations.html` has no login system (only `observations_laptop.html` does).
-- [ ] `frontend/dashboard.html` has no login system (only `observations_laptop.html` does).
+- [ ] **Deploy the app** (ADR-005/006/007/008/009) — in progress on Railway. `APP_PASSWORD` is
+  the only required env var to get a working deploy (dashboards + login); confirm the live URL
+  works end-to-end once `ANTHROPIC_API_KEY` is added too (see below). Two real bugs only
+  surfaced once actually deployed, both now fixed: a query-string routing bug (ADR-008) and a
+  sibling-directory deploy issue that needed `public/` nested inside `backend/` (ADR-009) —
+  re-verify the live URL once more after this latest fix lands.
+- [ ] `backend/public/observations.html` has no login system (only `observations_laptop.html` does).
+- [ ] `backend/public/dashboard.html` has no login system (only `observations_laptop.html` does).
 - [ ] All three dashboard files still have **different datasets** (verified 2026-08-21):
   `dashboard.html` = 6 schools/30 teachers (original), `observations.html` = 12 schools/120
   teachers (2026-06-30 refresh), `observations_laptop.html` = 14 schools/166 records, 8
@@ -31,9 +34,9 @@
 - [ ] No feedback yet from the user on the current desktop `dashboard.html` layout after the
   mobile-redesign revert (2026-06-24) — could resurface if the user wants further layout changes.
 - [ ] Potential future asks (not yet requested): more months of data, export/print views.
-- [ ] The Ask tool (ADR-004/005) needs a real `ANTHROPIC_API_KEY` in `backend/.env` (or the
+- [ ] The Ask tool (ADR-004/007) needs a real `ANTHROPIC_API_KEY` in `backend/.env` (or the
   deploy host's env vars) before it can actually return an answer — only tested with a fake
-  key so far (auth/error paths only, both before and after the frontend/backend reorg).
+  key so far (auth/error paths only; the server now starts fine without it per ADR-007).
 - [ ] The Ask tool's in-memory sessions reset on every server restart/redeploy — fine for
   personal use, but worth knowing, especially once deployed (a redeploy logs everyone out).
 

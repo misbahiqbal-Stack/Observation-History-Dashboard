@@ -27,7 +27,7 @@ if (!ANTHROPIC_API_KEY) {
     'return "not configured" until it is set.');
 }
 
-const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
+const FRONTEND_DIR = path.join(__dirname, 'public');
 
 const GATED_FILES = {
   '/dashboard.html': 'dashboard.html',

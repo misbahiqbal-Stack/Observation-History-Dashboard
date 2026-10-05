@@ -5,7 +5,7 @@
 
 **Observation History Dashboard** — teacher classroom observation tracking (World Bank Teach
 Tool), plus a password-gated Claude Q&A tool. One deployable app: `backend/server.js` serves
-everything in `frontend/`. Full purpose / stack / conventions / common tasks / gotchas:
+everything in `backend/public/`. Full purpose / stack / conventions / common tasks / gotchas:
 `.claude/skills/project-overview/SKILL.md`.
 
 ## Where things live
@@ -22,20 +22,20 @@ everything in `frontend/`. Full purpose / stack / conventions / common tasks / g
 | Custom subagents for repetitive workflows | `.claude/agents/*.md` |
 
 ```
-frontend/                  # all served HTML — static, no build step
-  dashboard.html              # desktop dashboard, no login
-  observations.html           # mobile UI, no login
-  observations_laptop.html    # full desktop dashboard, login system
-  ask.html                     # box + button + answer, password login form
 backend/                   # the one deployable unit
   server.js                   # zero-dependency Node server: static files + Ask API
   package.json                 # "start": "node server.js" — no dependencies
+  public/                      # all served HTML, nested here so the deploy is self-contained
+    dashboard.html               # desktop dashboard, no login
+    observations.html            # mobile UI, no login
+    observations_laptop.html     # full desktop dashboard, login system
+    ask.html                     # box + button + answer, password login form
 ```
 
 ## Commands
 
-- **Dashboards** (`frontend/*.html`): no build/install/test tooling — but now normally served
-  by `backend/server.js` rather than opened by double-clicking (see `Structure.md`).
+- **Dashboards** (`backend/public/*.html`): no build/install/test tooling — but now normally
+  served by `backend/server.js` rather than opened by double-clicking (see `Structure.md`).
 - **Run the app:** `cd backend && npm start` (or `node server.js`), then open
   `http://localhost:8787`. Needs `backend/.env` — copy from `.env.example` first.
 - **Deploy:** see `Structure.md` / `Decision.md` ADR-005 for the current setup.

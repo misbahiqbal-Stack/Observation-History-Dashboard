@@ -12,15 +12,15 @@ memory.md                  # durable facts + session history + auto version log
 Structure.md               # this file
 Decision.md                # ADR log
 Planning.md                # open tasks / current goals
-frontend/                  # all served HTML, static, no build step
-  frontend/dashboard.html              # desktop dashboard (no login)
-  frontend/observations.html           # mobile UI (no login)
-  frontend/observations_laptop.html    # full-featured desktop dashboard (has login)
-  ask.html                     # box + button + answer, password login form (Ask tool)
 backend/                   # the one deployable unit — a single Node process
-  server.js                   # zero-dependency http server: serves frontend/ + the Ask API
+  server.js                   # zero-dependency http server: serves public/ + the Ask API
   package.json                 # "start": "node server.js" — no dependencies, no build step
   .env.example                 # template — copy to .env, fill in real values (gitignored)
+  public/                      # all served HTML — static, no build step, nested here so the
+    dashboard.html               # whole app is self-contained within backend/ (ADR-009)
+    observations.html            # mobile UI (no login)
+    observations_laptop.html     # full-featured desktop dashboard (has login)
+    ask.html                     # box + button + answer, password login form (Ask tool)
 .claude/skills/
   project-overview/SKILL.md      # purpose, stack, conventions, common tasks, gotchas
   update-teacher-data/SKILL.md   # data model + deterministic score-generation rules
@@ -28,14 +28,14 @@ backend/                   # the one deployable unit — a single Node process
   publish-artifact/SKILL.md      # CSP-safe substitutions for Claude Artifact publishing
 .claude/agents/
   data-refresh-agent.md          # adds/refreshes school-teacher-coach data
-  login-account-agent.md         # manages frontend/observations_laptop.html's login accounts
+  login-account-agent.md         # manages observations_laptop.html's login accounts
   artifact-publish-agent.md      # publishes/refreshes a dashboard as a Claude Artifact
   doc-keeper-agent.md            # syncs Planning.md/memory.md/Decision.md after a change
 ```
 
-## frontend/dashboard.html — Current State (as of 2026-06-29)
+## backend/public/dashboard.html — Current State (as of 2026-06-29)
 
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\frontend/dashboard.html`
+- **File:** `backend\public\dashboard.html`
 - **Title:** "Teacher Observation Score History" (renamed from "Teacher Observation Dashboard")
 - **School selector** at the top: dropdown filters the entire page to one school or all schools.
 - **KPI cards:** Teachers shown, observation average, Improving / Steady / Declining counts.
@@ -47,12 +47,12 @@ backend/                   # the one deployable unit — a single Node process
 - **Offline:** No CDN. Works by double-clicking.
 - **No login system.**
 - **Data:** original 30-teacher / 6-school dataset — was NOT included in the 2026-06-30 refresh
-  to 120 teachers / 12 schools that `frontend/observations.html` and `frontend/observations_laptop.html` received.
+  to 120 teachers / 12 schools that `backend/public/observations.html` and `backend/public/observations_laptop.html` received.
 
-## frontend/observations.html — Mobile UI (as of 2026-06-29)
+## backend/public/observations.html — Mobile UI (as of 2026-06-29)
 
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\frontend/observations.html`
-- **Purpose:** Android-style mobile UI (Material Design 3). Separate from `frontend/dashboard.html` — phone-first, portrait only.
+- **File:** `backend\public\observations.html`
+- **Purpose:** Android-style mobile UI (Material Design 3). Separate from `backend/public/dashboard.html` — phone-first, portrait only.
 - **Requires internet once** to load Google Roboto font and Material Icons from CDN.
 - **Color scheme:** Dark green — primary `#1b5e20` (changed from original blue `#1a56a4`).
 - **Three screens:**
@@ -63,10 +63,10 @@ backend/                   # the one deployable unit — a single Node process
 - **Max-width:** 430px centred — looks like a phone on desktop too.
 - **No login system.**
 
-## frontend/observations_laptop.html — Laptop Dashboard (verified against source 2026-08-21)
+## backend/public/observations_laptop.html — Laptop Dashboard (verified against source 2026-08-21)
 
-- **File:** `c:\Users\misba\OneDrive\Desktop\Project 1\frontend/observations_laptop.html`
-- **Purpose:** Full-featured desktop/laptop dashboard. Separate from `frontend/dashboard.html` and `frontend/observations.html`, and the most feature-complete of the three — well ahead of what the old `Memory.md` had documented (this section was re-verified directly against the file's source, not carried over from the stale doc).
+- **File:** `backend\public\observations_laptop.html`
+- **Purpose:** Full-featured desktop/laptop dashboard. Separate from `backend/public/dashboard.html` and `backend/public/observations.html`, and the most feature-complete of the three — well ahead of what the old `Memory.md` had documented (this section was re-verified directly against the file's source, not carried over from the stale doc).
 - **Design identity:** Forest green sidebar (`#1b5e20`) + amber active-selection accent (`#e8a217`). Sage-green background (`#f5f9f5`).
 - **Login system:** Full-screen login overlay, three roles — `coach`, `principal`, `admin` — shown as role pills in the UI.
   - Login credentials → see **Login Credentials** below.
@@ -90,7 +90,7 @@ backend/                   # the one deployable unit — a single Node process
   boxes with indicators + CPD recommendation).
 - **Interaction:** Click teacher → loads detail; click again → deselects. School dropdown resets selection.
 
-### Login Credentials (frontend/observations_laptop.html)
+### Login Credentials (backend/public/observations_laptop.html)
 
 All stored in `USER_DB` constant in the JS — passwords are simple (`123` / `admin`), visible in
 source (client-side only — security by effort, not encryption). 8 coaches, each covering one or
@@ -110,7 +110,7 @@ school; 1 admin (sees everything).
 | `admin` | `admin` | admin | All schools |
 | `principal <school>` | `123` | principal | One school each — key is `principal` + a lowercase school slug (e.g. `principal alnoor`, `principal brightfuture`, … all 14 schools) |
 
-### School Codes (frontend/observations_laptop.html)
+### School Codes (backend/public/observations_laptop.html)
 
 `SCHOOL_CODES` constant — 14 entries, one per school (used to unlock/reference a school by code):
 
@@ -131,16 +131,20 @@ school; 1 admin (sees everything).
 | `MPS` | Minhaj Public School |
 | `NHS` | New Horizon School |
 
-## frontend/ + backend/ — the deployable app (reorganized 2026-09-29, see `Decision.md` ADR-005)
+## backend/ — the deployable app (reorganized 2026-09-29, nested 2026-10-05)
 
-- **Purpose:** `frontend/` holds every served HTML file (the three dashboards, unchanged, plus
-  `ask.html` — box/button/answer, password login form). `backend/server.js` is the one
-  deployable unit: a single Node process that serves all of `frontend/` as static files *and*
+- **Purpose:** `backend/public/` holds every served HTML file (the three dashboards, unchanged,
+  plus `ask.html` — box/button/answer, password login form). `backend/server.js` is the one
+  deployable unit: a single Node process that serves all of `public/` as static files *and*
   runs the Ask tool's API, so the whole project ships as one process with one public URL.
 - **Why a server at all:** the Ask tool's Anthropic API key must stay server-side — it's the one
   component in the project that can't be a plain static file (see `Decision.md` ADR-004).
-  ADR-005 records *why* it was pulled out into `backend/` + `frontend/` instead of staying a
-  one-off `ask/` folder bolted on next to the dashboards.
+  ADR-005 records *why* it was pulled out of a one-off `ask/` folder into a proper `backend/` +
+  frontend split; ADR-009 records why the frontend ended up *nested inside* `backend/` (as
+  `backend/public/`) instead of staying a sibling directory — Railway's "Root Directory" setting
+  only includes that directory's own contents in the deploy, not siblings, so a sibling
+  `frontend/` genuinely didn't exist at runtime. Keeping everything inside `backend/` makes the
+  deployable unit self-contained regardless of how a given platform scopes its root directory.
 - **Stack:** zero-dependency Node.js (`http`/`https`/`crypto`/`fs` built-ins only). `backend/
   package.json` exists only so deploy platforms detect it as a Node app and know `npm start` —
   there is still nothing to `npm install`.
@@ -150,30 +154,38 @@ school; 1 admin (sees everything).
   logged out would get a `302` and could get misread as "unhealthy," killing the deploy. `GET
   /`, `/dashboard.html`, `/observations.html`, `/observations_laptop.html` all require a valid
   session (see ADR-006) — an unauthenticated request 302s to `/ask.html?next=<path>`, and
-  logging in redirects straight back to it. `GET /me`, `POST /login`, `POST /logout`, `POST
-  /ask` are the auth/Ask API (`observations_laptop.html`'s own separate client-side
-  coach/principal/admin login still runs *behind* this gate, unaffected).
+  logging in redirects straight back to it (route matching strips the query string first —
+  see ADR-008, a bug that broke every unauthenticated visit until fixed). `GET /me`, `POST
+  /login`, `POST /logout`, `POST /ask` are the auth/Ask API (`observations_laptop.html`'s own
+  separate client-side coach/principal/admin login still runs *behind* this gate, unaffected).
 - **Auth (whole app, ADR-006):** single shared password (`APP_PASSWORD` env var), constant-time
   compared (`crypto.timingSafeEqual`). On success, a random session token is stored server-side
   (in-memory `Set` — resets on server restart/redeploy, fine for a single personal user) and
   handed to the browser as an `HttpOnly`, `SameSite=Strict` cookie.
 - **Config:** copy `backend/.env.example` to `backend/.env` (gitignored) and fill in
-  `APP_PASSWORD`, `ANTHROPIC_API_KEY`, optionally `ANTHROPIC_MODEL` (default
+  `APP_PASSWORD` (required to start, ADR-007), `ANTHROPIC_API_KEY` (optional — only `/ask`
+  needs it, returns a clean `503` if missing), optionally `ANTHROPIC_MODEL` (default
   `claude-sonnet-5`) and `PORT` (default `8787`).
 - **Run it:** `node backend/server.js` (or `npm start` from `backend/`), then open
   `http://localhost:8787`.
-- **Verified 2026-09-29:** re-tested end-to-end twice — once right after the frontend/backend
-  reorg (all four pages served unauthenticated, byte-for-byte matching pre-reorg content), again
-  after adding the full-site auth gate (unauthenticated → 302 to `/ask.html?next=...` on all
-  four routes, authenticated → 200 with matching content, login/logout cycle intact). Still
-  uses a fake API key — the real-answer success path is unverified (see `Planning.md`).
+- **Verified 2026-10-05:** full re-test after nesting `public/` inside `backend/` — `/`,
+  `/dashboard.html`, `/observations.html`, `/observations_laptop.html` all serve with
+  byte-for-byte matching content; `/ask.html?next=...` (the exact URL the login redirect
+  produces) now returns `200` instead of the ADR-008 404; full unauth → redirect → login →
+  retry cycle confirmed end-to-end locally before pushing. Still uses a fake API key — the
+  real-answer success path is unverified (see `Planning.md`).
 - **Node.js was not installed on this machine** before ADR-004's task — installed via
   `winget install OpenJS.NodeJS.LTS` (v24.19.0) with the user's confirmation.
+- **Deploying:** live on Railway as of this entry — see `Planning.md` for current status. Two
+  real deploy-time bugs were caught and fixed only once actually deployed (ADR-008's query
+  string bug, ADR-009's sibling-directory issue) — neither was reproducible by local testing
+  alone, since `localhost` testing never exercised a platform's actual root-directory scoping.
 
 ## Note on dataset drift
 
-`frontend/dashboard.html` still embeds the original 30-teacher / 6-school dataset (verified in its school
-dropdown: only Al-Noor, Bright Future, City Grammar, Daanish, Evergreen, Falcon — the 6 new
-schools from the 2026-06-30 Google Sheet refresh are missing). `frontend/observations.html` and
-`frontend/observations_laptop.html` are both current with 120 teachers / 12 schools. This is a known
-inconsistency (see `Planning.md`), not yet requested to be fixed.
+`backend/public/dashboard.html` still embeds the original 30-teacher / 6-school dataset
+(verified in its school dropdown: only Al-Noor, Bright Future, City Grammar, Daanish,
+Evergreen, Falcon — the 6 new schools from the 2026-06-30 Google Sheet refresh are missing).
+`backend/public/observations.html` and `backend/public/observations_laptop.html` are both
+current with 120 teachers / 12 schools. This is a known inconsistency (see `Planning.md`), not
+yet requested to be fixed.

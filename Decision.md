@@ -32,6 +32,40 @@ Copy the template below to the **top** of the log (newest first). Give each a se
 
 <!-- Newest entries on top. -->
 
+### ADR-009: Nest frontend/ inside backend/ as backend/public/
+
+- **Date:** 2026-10-05
+- **Status:** Accepted
+- **Context:** Live on Railway (Root Directory set to `backend`, per ADR-005's instructions),
+  every page request failed with `ENOENT: no such file or directory, open '/frontend/ask.html'`.
+  `server.js` resolved its frontend directory as `path.join(__dirname, '..', 'frontend')` — a
+  sibling of `backend/`. This assumed a platform's "Root Directory" setting just changes the
+  working directory within a full repo checkout (true for some platforms). Railway's actual
+  behavior is different: it only includes that directory's own contents in what gets deployed —
+  a sibling directory like `frontend/` genuinely isn't present in the running container at all.
+  This wasn't caught by local testing, which always ran from the full repo checkout on this
+  machine, never from a Railway-style scoped build.
+- **Decision:** Move the four frontend HTML files from the top-level `frontend/` into
+  `backend/public/`, and change `server.js`'s `FRONTEND_DIR` to `path.join(__dirname, 'public')`
+  — no `..` needed. The entire deployable app is now self-contained inside `backend/`.
+- **Alternatives considered:** Leave Root Directory unset on Railway (so the full repo is in
+  scope) and set a custom Start Command instead (rejected — works around one platform's
+  behavior rather than fixing the actual design flaw; the next platform might scope root
+  directories the same way, and a self-contained `backend/` is correct regardless of which way
+  any given platform happens to behave); keep `frontend/` as the public-facing name instead of
+  `public/` (rejected only for naming — `public/` is the more conventional name for "the static
+  assets a Node server serves," now that it's nested under the thing serving it rather than a
+  peer of it).
+- **Consequences:** `Structure.md`, `Claude.md`, `Planning.md`, and every `.claude/skills/`
+  and `.claude/agents/` reference to the three dashboard files were updated from `frontend/` to
+  `backend/public/`. Re-verified end-to-end locally (all four pages serve correctly from the new
+  path; the ADR-008 query-string URL also still works) before pushing. General lesson,
+  alongside ADR-008: this project's local "it works on localhost" testing has now twice missed
+  a bug that only a real deploy surfaced — both were platform-interaction issues (query strings
+  reaching a reverse-proxied domain, root-directory scoping), not things a local `node
+  server.js` run naturally exercises. Worth deploying to a throwaway environment earlier in
+  future changes to this file, not just testing on localhost.
+
 ### ADR-008: Fix route matching to strip the query string (bug from ADR-006)
 
 - **Date:** 2026-09-30
