@@ -92,23 +92,27 @@ backend/                   # the one deployable unit — a single Node process
 
 ### Login Credentials (backend/public/observations_laptop.html)
 
-All stored in `USER_DB` constant in the JS — passwords are simple (`123` / `admin`), visible in
-source (client-side only — security by effort, not encryption). 8 coaches, each covering one or
-more schools (no longer 1-to-1); 14 principal accounts, one per school, each scoped to only that
-school; 1 admin (sees everything).
+Usernames and school assignments live in the `USER_DB` constant in the JS. Passwords do **not** —
+as of ADR-010 the file holds `__COACH_PW__` / `__PRINCIPAL_PW__` / `__ADMIN_PW__` placeholders,
+and `server.js` substitutes the real values from `backend/.env` as the page is served. Every
+coach shares `COACH_PASSWORD`, every principal shares `PRINCIPAL_PASSWORD`, admin uses
+`ADMIN_PASSWORD`. **Still client-side:** the substituted values reach the browser and are visible
+in View Source — ADR-010 fixes the source-control leak, not the client-side exposure. 8 coaches,
+each covering one or more schools (no longer 1-to-1); 14 principal accounts, one per school, each
+scoped to only that school; 1 admin (sees everything).
 
-| Username | Password | Role | School(s) |
+| Username | Password source | Role | School(s) |
 |---|---|---|---|
-| `saima jabeen` | `123` | coach | Al-Noor Academy, Bright Future School, City Grammar School |
-| `aneela khaliq` | `123` | coach | Daanish Public School, Evergreen Institute |
-| `javeria khalil` | `123` | coach | Falcon Academy, Greenwood Public School |
-| `hafsa bashir` | `123` | coach | Horizon Model School, Iqra Education Centre |
-| `iqra arshad` | `123` | coach | Junior Scholars Academy, Knowledge Valley School |
-| `ashas khan` | `123` | coach | Lighthouse Academy |
-| `rabia saeed` | `123` | coach | Minhaj Public School |
-| `usman tariq` | `123` | coach | New Horizon School |
-| `admin` | `admin` | admin | All schools |
-| `principal <school>` | `123` | principal | One school each — key is `principal` + a lowercase school slug (e.g. `principal alnoor`, `principal brightfuture`, … all 14 schools) |
+| `saima jabeen` | `COACH_PASSWORD` | coach | Al-Noor Academy, Bright Future School, City Grammar School |
+| `aneela khaliq` | `COACH_PASSWORD` | coach | Daanish Public School, Evergreen Institute |
+| `javeria khalil` | `COACH_PASSWORD` | coach | Falcon Academy, Greenwood Public School |
+| `hafsa bashir` | `COACH_PASSWORD` | coach | Horizon Model School, Iqra Education Centre |
+| `iqra arshad` | `COACH_PASSWORD` | coach | Junior Scholars Academy, Knowledge Valley School |
+| `ashas khan` | `COACH_PASSWORD` | coach | Lighthouse Academy |
+| `rabia saeed` | `COACH_PASSWORD` | coach | Minhaj Public School |
+| `usman tariq` | `COACH_PASSWORD` | coach | New Horizon School |
+| `admin` | `ADMIN_PASSWORD` | admin | All schools |
+| `principal <school>` | `PRINCIPAL_PASSWORD` | principal | One school each — key is `principal` + a lowercase school slug (e.g. `principal alnoor`, `principal brightfuture`, … all 14 schools) |
 
 ### School Codes (backend/public/observations_laptop.html)
 
@@ -163,8 +167,11 @@ school; 1 admin (sees everything).
   (in-memory `Set` — resets on server restart/redeploy, fine for a single personal user) and
   handed to the browser as an `HttpOnly`, `SameSite=Strict` cookie.
 - **Config:** copy `backend/.env.example` to `backend/.env` (gitignored) and fill in
-  `APP_PASSWORD` (required to start, ADR-007), `ANTHROPIC_API_KEY` (optional — only `/ask`
-  needs it, returns a clean `503` if missing), optionally `ANTHROPIC_MODEL` (default
+  `APP_USERNAME` + `APP_PASSWORD` (both required to start, ADR-011 — the app login),
+  `COACH_PASSWORD` / `PRINCIPAL_PASSWORD` /
+  `ADMIN_PASSWORD` (all three required to start, ADR-010 — they are injected into
+  `observations_laptop.html`'s `USER_DB` at serve time), `ANTHROPIC_API_KEY` (optional — only
+  `/ask` needs it, returns a clean `503` if missing), optionally `ANTHROPIC_MODEL` (default
   `claude-sonnet-5`) and `PORT` (default `8787`).
 - **Run it:** `node backend/server.js` (or `npm start` from `backend/`), then open
   `http://localhost:8787`.

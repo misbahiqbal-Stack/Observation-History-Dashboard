@@ -16,8 +16,10 @@ Rules to enforce on every change:
   newly-added school rather than assuming a new coach account is needed.
 - **`SCHOOL_CODES` must have exactly one entry per school** — a short, distinct code not already
   in use. When adding a school, add its code here too, not just to `USER_DB`.
-- **Keep the password scheme consistent** with existing accounts (currently plain `"123"` for
-  coaches/principals, `"admin"` for admin) unless the user explicitly asks to change the login
+- **Never write a literal password into `USER_DB`.** Per ADR-010, passwords are `__COACH_PW__` /
+  `__PRINCIPAL_PW__` / `__ADMIN_PW__` placeholders that `server.js` substitutes from `backend/.env`
+  at serve time. New accounts reuse the placeholder for their role; changing an actual password
+  means editing `backend/.env`, not this file. Unless the user explicitly asks to change the login
   model itself — that's an architectural decision (record it in `Decision.md` if it happens),
   not a routine account edit.
 - **Don't add password hashing, backend auth, or any real security hardening unprompted** — the

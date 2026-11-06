@@ -80,6 +80,8 @@
   <div class="card" id="loginCard">
     <h1>Sign in</h1>
     <div class="error" id="loginHint" style="color: var(--ink-2);"></div>
+    <label for="username">Username</label>
+    <input id="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" />
     <label for="password">Password</label>
     <input id="password" type="password" autocomplete="current-password" />
     <div class="error" id="loginError"></div>
@@ -101,6 +103,7 @@
 <script>
   const loginCard = document.getElementById('loginCard');
   const askCard = document.getElementById('askCard');
+  const usernameInput = document.getElementById('username');
   const passwordInput = document.getElementById('password');
   const loginBtn = document.getElementById('loginBtn');
   const loginError = document.getElementById('loginError');
@@ -117,8 +120,9 @@
   function showLogin() {
     askCard.hidden = true;
     loginCard.hidden = false;
+    usernameInput.value = '';
     passwordInput.value = '';
-    passwordInput.focus();
+    usernameInput.focus();
   }
 
   const nextPath = new URLSearchParams(location.search).get('next');
@@ -144,7 +148,10 @@
       const res = await fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passwordInput.value }),
+        body: JSON.stringify({
+          username: usernameInput.value.trim(),
+          password: passwordInput.value,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -196,6 +203,8 @@
   }
 
   loginBtn.addEventListener('click', login);
+  // Enter in the username field moves to the password rather than submitting a half-filled form.
+  usernameInput.addEventListener('keydown', e => { if (e.key === 'Enter') passwordInput.focus(); });
   passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
   askBtn.addEventListener('click', ask);
   questionInput.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(); });

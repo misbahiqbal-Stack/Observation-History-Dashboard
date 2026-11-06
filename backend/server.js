@@ -14,12 +14,35 @@ if (fs.existsSync(envPath)) {
 }
 
 const PORT = process.env.PORT || 8787;
+const APP_USERNAME = process.env.APP_USERNAME;
 const APP_PASSWORD = process.env.APP_PASSWORD;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
 
-if (!APP_PASSWORD) {
-  console.error('Missing APP_PASSWORD in backend/.env. Refusing to start.');
+// Dashboard logins injected into observations_laptop.html at serve time (ADR-010).
+const DASHBOARD_PASSWORDS = {
+  __COACH_PW__: process.env.COACH_PASSWORD,
+  __PRINCIPAL_PW__: process.env.PRINCIPAL_PASSWORD,
+  __ADMIN_PW__: process.env.ADMIN_PASSWORD,
+};
+
+const missingAppCredentials = [
+  ['APP_USERNAME', APP_USERNAME],
+  ['APP_PASSWORD', APP_PASSWORD],
+].filter(([, value]) => !value).map(([name]) => name);
+if (missingAppCredentials.length) {
+  console.error('Missing ' + missingAppCredentials.join(' and ') +
+    ' in backend/.env. Refusing to start — the login screen would be unusable. ' +
+    'See .env.example.');
+  process.exit(1);
+}
+const missingDashboardPasswords = Object.entries(DASHBOARD_PASSWORDS)
+  .filter(([, value]) => !value)
+  .map(([placeholder]) => placeholder.replace(/^__|_PW__$/g, '') + '_PASSWORD');
+if (missingDashboardPasswords.length) {
+  console.error('Missing ' + missingDashboardPasswords.join(', ') +
+    ' in backend/.env. Refusing to start — observations_laptop.html would ship unusable ' +
+    'placeholder passwords. See .env.example.');
   process.exit(1);
 }
 if (!ANTHROPIC_API_KEY) {
@@ -55,13 +78,33 @@ const LANDING_PAGE = `<!doctype html>
   <a href="/ask.html">Ask (Claude Q&amp;A)</a>
 </div></body></html>`;
 
+// Reads an HTML file and substitutes any __*_PW__ placeholders with the real values from
+// .env, so passwords live in the environment rather than in the committed source (ADR-010).
+// Note: the substituted page still reaches the browser, so these are visible in View Source.
+function renderHtml(filePath) {
+  let html = fs.readFileSync(filePath, 'utf8');
+  for (const [placeholder, value] of Object.entries(DASHBOARD_PASSWORDS)) {
+    html = html.split(placeholder).join(value);
+  }
+  return html;
+}
+
 const sessions = new Set();
 
-function passwordMatches(candidate) {
-  const a = Buffer.from(candidate);
-  const b = Buffer.from(APP_PASSWORD);
-  if (a.length !== b.length) return false;
+// Constant-time string compare. Hashing both sides first keeps the comparison length-independent,
+// so a wrong-length guess costs the same as a same-length one and leaks nothing via timing.
+function safeEqual(candidate, expected) {
+  const a = crypto.createHash('sha256').update(String(candidate)).digest();
+  const b = crypto.createHash('sha256').update(String(expected)).digest();
   return crypto.timingSafeEqual(a, b);
+}
+
+// Both fields are always checked, and the caller reports one combined error (ADR-011) — never
+// "wrong password" vs "no such user", which would confirm a valid username to a guesser.
+function credentialsMatch(username, password) {
+  const userOk = safeEqual(username, APP_USERNAME);
+  const passOk = safeEqual(password, APP_PASSWORD);
+  return userOk && passOk;
 }
 
 function parseCookies(req) {
@@ -159,7 +202,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && GATED_FILES[pathname]) {
       if (!isAuthed(req)) return redirectToLogin(res, pathname);
-      const html = fs.readFileSync(path.join(FRONTEND_DIR, GATED_FILES[pathname]));
+      const html = renderHtml(path.join(FRONTEND_DIR, GATED_FILES[pathname]));
       res.writeHead(200, { 'Content-Type': 'text/html' });
       return res.end(html);
     }
@@ -176,10 +219,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/login') {
       const body = await readBody(req);
-      let password;
-      try { ({ password } = JSON.parse(body || '{}')); } catch (e) { password = undefined; }
-      if (typeof password !== 'string' || !passwordMatches(password)) {
-        return send(res, 401, { error: 'Wrong password' });
+      let username, password;
+      try { ({ username, password } = JSON.parse(body || '{}')); } catch (e) { /* handled below */ }
+      if (typeof username !== 'string' || typeof password !== 'string' ||
+          !credentialsMatch(username, password)) {
+        return send(res, 401, { error: 'Incorrect username or password' });
       }
       const token = crypto.randomBytes(32).toString('hex');
       sessions.add(token);

@@ -21,9 +21,13 @@ description: Use when adding, removing, or modifying login accounts, roles, or s
   to reference/unlock a school.
 - Session state persists via `sessionStorage` (clears when the tab closes) — not a real backend
   session.
-- Passwords are plain-text in source (currently `123` for coaches/principals, `admin` for
-  admin). **This is an accepted tradeoff for a static, client-side-only file — do not "harden"
-  it (e.g. hashing) without the user asking**, since there's no backend to keep a secret from.
+- Passwords are **not** in this file. Per ADR-010 it holds `__COACH_PW__` / `__PRINCIPAL_PW__` /
+  `__ADMIN_PW__` placeholders, and `backend/server.js` substitutes the real values from
+  `backend/.env` as the page is served. New accounts reuse the placeholder for their role;
+  changing an actual password means editing `backend/.env`. **Never write a literal password
+  into `USER_DB`.** The substituted values still reach the browser and are visible in View
+  Source — a known gap tracked in `Planning.md`; don't "harden" it further (e.g. hashing)
+  without the user asking, since the real fix is the server-side login endpoint, not obfuscation.
 
 ## Adding a new school
 
@@ -36,8 +40,8 @@ description: Use when adding, removing, or modifying login accounts, roles, or s
 
 ## Adding a new coach or principal account
 
-- Coach: add `"<firstname lastname>": { name, pass: "123", role: "coach", schools: [...] }`.
-- Principal: add `"principal <slug>": { name: "Principal (<School Name>)", pass: "123", role:
+- Coach: add `"<firstname lastname>": { name, pass: "__COACH_PW__", role: "coach", schools: [...] }`.
+- Principal: add `"principal <slug>": { name: "Principal (<School Name>)", pass: "__PRINCIPAL_PW__", role:
   "principal", schools: ["<School Name>"] }`.
 - Keep the password scheme consistent with existing accounts unless the user asks for a change
   in the login model itself — that would be a `Decision.md`-worthy architectural change, not a

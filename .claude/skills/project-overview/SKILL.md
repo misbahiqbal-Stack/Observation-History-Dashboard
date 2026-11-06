@@ -74,9 +74,12 @@ bug once (see `Decision.md` / `memory.md` session history, 2026-08-21).
    tried and explicitly rejected by the user once already.
 3. **`backend/public/observations_laptop.html`'s 4th indicator is "Instructional Quality"**, not "Differentiated
    Instruction" like the other two files — a real content difference, not a typo.
-4. **Passwords are plain-text in source** across all login accounts in
-   `backend/public/observations_laptop.html` (`123` / `admin`). This is an accepted tradeoff for a
-   client-side-only static file, not an oversight — don't "fix" it without asking.
+4. **Passwords come from `backend/.env`, never from source** (ADR-010/011).
+   `backend/public/observations_laptop.html` holds `__COACH_PW__` / `__PRINCIPAL_PW__` /
+   `__ADMIN_PW__` placeholders that `server.js` substitutes at serve time; the app gate uses
+   `APP_USERNAME` + `APP_PASSWORD`. Never hard-code a credential in any file. Known remaining
+   gap: the substituted dashboard passwords still reach the browser and show in View Source —
+   tracked in `Planning.md`.
 5. **A PostToolUse hook auto-appends a `## Version N` entry to `memory.md`** on every
    Write/Edit in this project (except to `memory.md` itself). Don't hand-edit those entries;
    supplement the most recent one with a plain-English description of what changed.

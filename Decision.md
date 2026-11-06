@@ -32,6 +32,69 @@ Copy the template below to the **top** of the log (newest first). Give each a se
 
 <!-- Newest entries on top. -->
 
+### ADR-011: Add a username to the app login, both credentials from env vars
+
+- **Date:** 2026-11-06
+- **Status:** Accepted
+- **Context:** The shared app gate from ADR-004/006 authenticated with a password alone — no
+  username field. The user asked for a username *and* password login, with both values read from
+  `APP_USERNAME` and `APP_PASSWORD` rather than hard-coded, choosing the actual values themselves.
+  Unlike the previous two requests, this was a genuine gap rather than something already built.
+- **Decision:** Added `APP_USERNAME` alongside the existing `APP_PASSWORD`; both are required for
+  the server to boot (same refuse-to-start pattern as ADR-007/010). `passwordMatches()` is
+  replaced by `credentialsMatch(username, password)`, which checks **both** fields and returns a
+  single combined result, and `POST /login` reports one error — `Incorrect username or password` —
+  for every failure mode. `ask.html` gains a username input above the password.
+- **Alternatives considered:** Multiple user accounts in a `USERS_JSON` env var (rejected — no such
+  requirement; this is one shared gate, and `observations_laptop.html` already has its own
+  multi-account layer). Distinct "no such user" vs. "wrong password" errors (rejected — that
+  confirms a valid username to a guesser; one combined message is standard practice). Short-
+  circuiting the password check when the username is wrong (rejected — leaks via response timing).
+- **Consequences:** The login screen now takes two fields and the deploy needs one more env var
+  (`APP_USERNAME`) or it will refuse to boot — same deploy-checklist cost as ADR-010. The compare
+  helper now SHA-256s both sides before `timingSafeEqual`, which also removes the old
+  length-mismatch early-return, so a wrong-length guess no longer reveals the expected length.
+
+### ADR-010: Move USER_DB passwords out of source into .env, injected at serve time
+
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Context:** A secret scan of the repo found `server.js` already clean (every secret read via
+  `process.env`) and no leaked API keys anywhere — but `observations_laptop.html`'s `USER_DB`
+  held 23 plaintext passwords in committed source: `"123"` for all 8 coaches and all 14
+  principals, and `"admin"` for the admin account. The user asked to move hardcoded credentials
+  into `.env`. That is not straightforwardly possible here: the dashboards are static HTML served
+  directly to the browser with no build step or templating, so any value `USER_DB` needs in order
+  to work must reach the client, where View Source reveals it. `.env` can only hide what stays on
+  the server. Per ADR-006 these passwords are already an inner layer behind the shared
+  `APP_PASSWORD` gate, so they are role selection within an authenticated app rather than the
+  boundary against the public internet.
+- **Decision:** Split the problem. The source-control leak is fixed: `USER_DB` now holds
+  `__COACH_PW__` / `__PRINCIPAL_PW__` / `__ADMIN_PW__` placeholders, and `server.js`'s new
+  `renderHtml()` substitutes the real values from `COACH_PASSWORD` / `PRINCIPAL_PASSWORD` /
+  `ADMIN_PASSWORD` as each gated page is served. Three grouped variables rather than 23
+  per-user ones, matching the existing reality that every coach shares one password and every
+  principal shares another. Startup refuses to boot if any are unset (same pattern as
+  `APP_PASSWORD` in ADR-007's sibling check), so the page can never ship literal placeholder
+  strings. The client-side exposure is explicitly **not** fixed and is documented as such in a
+  comment above `renderHtml()`.
+- **Alternatives considered:** Real server-side auth — a `POST /api/dashboard-login` endpoint
+  verifying against `.env` so passwords never reach the browser (the actual fix for the
+  client-side exposure; deferred as a larger change, and offered to the user, who chose this
+  option — remains the correct next step if dashboard logins ever need to be a real trust
+  boundary). Leaving `USER_DB` as-is and merely swapping `123` for less guessable literals
+  (rejected — keeps credentials in git, which was the thing worth fixing). Twenty-three
+  per-user environment variables (rejected — unwieldy, and it would encode a per-user password
+  scheme the app does not actually have).
+- **Consequences:** No credentials in committed source, and each deploy (local vs. Railway) can
+  set its own dashboard passwords via its own environment — the staging/production separation
+  that was previously impossible. Two costs: `observations_laptop.html` can no longer be opened
+  by double-clicking it from disk, because the placeholders are only substituted by the server
+  (consistent with ADR-005/009, which already made serving the normal path, but it does fully
+  close the door on the ADR-002 "works offline by double-clicking" property for this one file);
+  and Railway now needs `COACH_PASSWORD`, `PRINCIPAL_PASSWORD`, and `ADMIN_PASSWORD` set in its
+  environment or the deploy will refuse to boot.
+
 ### ADR-009: Nest frontend/ inside backend/ as backend/public/
 
 - **Date:** 2026-10-05

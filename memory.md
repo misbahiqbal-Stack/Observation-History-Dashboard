@@ -88,6 +88,39 @@
 
 > Condensed, chronological. Newest on top. Folded in from the retired `Session_log.md`.
 
+### 2026-11-06 — Username added to the app login (ADR-011)
+
+Added an `APP_USERNAME` field to the shared app gate, which until now was password-only.
+`credentialsMatch()` replaces `passwordMatches()`, checking both fields and returning one
+combined verdict; `POST /login` answers every failure with the same `Incorrect username or
+password`, so a guesser learns nothing about which half was wrong. Both vars are now required to
+boot. Verified the full matrix: wrong username, wrong password, both wrong, each field missing,
+empty body, and a non-string username all return 401; only the correct pair returns 200.
+
+Context worth keeping: this was the first of the user's last three requests that was an actual
+gap. The two before it ("build a web UI for my bot", and before that part of the secret scan) were
+already built — `ask.html` + `server.js` already had the input/button/output and server-only key
+handling. Check what exists before building when a request sounds like greenfield work.
+
+### 2026-11-05 — Secret scan; USER_DB passwords moved to .env (ADR-010)
+
+Scanned the repo for hardcoded credentials. `server.js` was already clean (all secrets via
+`process.env`) and no real API keys existed anywhere. The one finding was 23 plaintext passwords
+in `observations_laptop.html`'s `USER_DB` (`"123"` × 22, `"admin"` × 1) — plus the same values
+tabulated in `Structure.md`, which was the quieter half of the same leak.
+
+Key constraint worth remembering: **`.env` cannot hide client-side values.** These dashboards are
+static HTML with no build step, so anything `USER_DB` needs in order to work must reach the
+browser. Offered the user three options; they chose serve-time injection — placeholders in source,
+real values substituted by `server.js`'s new `renderHtml()` from `COACH_PASSWORD` /
+`PRINCIPAL_PASSWORD` / `ADMIN_PASSWORD`. This fixes the git leak only; View Source still shows
+them. Real server-side auth (`POST /api/dashboard-login`) remains the actual fix and is logged as
+an open task.
+
+Also created `backend/.env` for the first time (it had never existed, so the server refused to
+boot), and updated `manage-login-system/SKILL.md` + `login-account-agent.md` so future account
+additions write placeholders rather than reintroducing literals.
+
 ### 2026-08-19/21 — Docs restructured into six-file scaffold
 
 Split the old four-file scaffold (`Claude.md`, `Decisions.md`, `Memory.md`, `Session_log.md`)

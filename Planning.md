@@ -16,12 +16,29 @@
 
 ## Open Tasks
 
-- [ ] **Deploy the app** (ADR-005/006/007/008/009) — in progress on Railway. `APP_PASSWORD` is
-  the only required env var to get a working deploy (dashboards + login); confirm the live URL
-  works end-to-end once `ANTHROPIC_API_KEY` is added too (see below). Two real bugs only
+- [ ] **Deploy the app** (ADR-005/006/007/008/009/010/011) — in progress on Railway. **Five** env
+  vars are now required for the server to boot: `APP_USERNAME` + `APP_PASSWORD` (ADR-011) plus
+  `COACH_PASSWORD`, `PRINCIPAL_PASSWORD`, and `ADMIN_PASSWORD` (ADR-010). Set them all in Railway's
+  environment or the deploy will exit on startup; confirm the live URL works end-to-end once
+  `ANTHROPIC_API_KEY` is added too (see below). Two real bugs only
   surfaced once actually deployed, both now fixed: a query-string routing bug (ADR-008) and a
   sibling-directory deploy issue that needed `public/` nested inside `backend/` (ADR-009) —
   re-verify the live URL once more after this latest fix lands.
+- [ ] **The old `123`/`admin` passwords are still in git history** (found by the 2026-11-06 full
+  scan). ADR-010 removed them from the working tree, but `HEAD` still contains 22 `pass: "123"`
+  entries and they appear in 2 commits reachable from `main` — `5d102dc`, `89ec7b5`, `2b6af4f`.
+  Anyone who clones the repo can recover them with `git log -p`. Options: (a) accept it, since
+  these were always weak demo passwords behind the `APP_PASSWORD` gate and the live values are
+  now different — lowest effort, and the exposed strings no longer unlock anything; (b) rewrite
+  history with `git filter-repo`, which changes every commit hash and needs a force-push.
+  **Not started — needs the user's call.** No API key was ever committed (verified), and
+  `backend/.env` has never been committed.
+- [ ] **Move `observations_laptop.html`'s login server-side** (follow-up to ADR-010). ADR-010 got
+  the 23 `USER_DB` passwords out of committed source, but they are still substituted into the page
+  and therefore visible in View Source. The real fix is a `POST /api/dashboard-login` endpoint that
+  verifies against `.env` and returns only `{name, role, schools}`, so passwords never reach the
+  browser. Lower urgency than it sounds: per ADR-006 the whole app already sits behind the
+  `APP_PASSWORD` gate, so this is an inner layer, not the public boundary.
 - [ ] `backend/public/observations.html` has no login system (only `observations_laptop.html` does).
 - [ ] `backend/public/dashboard.html` has no login system (only `observations_laptop.html` does).
 - [ ] All three dashboard files still have **different datasets** (verified 2026-08-21):
